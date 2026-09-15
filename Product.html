@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="icon" type="image/png" href="images/logo.png">
+
+    <title>Product | Orinic Foods</title>
+
+    <link rel="stylesheet" href="product.css">
+
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+    <!-- NAVBAR -->
+
+    <header class="navbar">
+
+        <div class="logo">
+            <img src="images/logo.png" alt="Orinic Foods">
+            <span>Orinic Foods</span>
+        </div>
+
+        <nav>
+            <a href="INDEX.html">Home</a>
+            <a href="INDEX.html#products">Products</a>
+            <a href="INDEX.html#process">Story</a>
+            <a href="INDEX.html#about">Contact</a>
+        </nav>
+
+        <div class="cart-icon" onclick="window.location.href='Cart.html'">
+            🛒
+            <span id="cartCount">0</span>
+        </div>
+
+        <div class="profile-icon" onclick="openProfile()">
+            <img src="images/profile_icon.png" alt="Profile">
+        </div>
+
+    </header>
+
+
+    <!-- PRODUCT -->
+
+    <main>
+
+        <section class="product-section">
+
+            <div class="product-container">
+
+                <!-- LEFT -->
+
+                <div class="product-image-section">
+
+                <div class="product-image-box">
+                    <img id="productImage" src="" alt="Product">
+                </div>
+
+                <div class="product-thumbnails">
+
+                    <img id="thumbnail1"
+                        src=""
+                        alt="Product Image 1">
+
+                    <img id="thumbnail2"
+                        src=""
+                        alt="Product Image 2">
+
+                    <img id="thumbnail3"
+                        src=""
+                        alt="Product Image 3">
+
+                </div>
+
+            </div>
+
+
+                <!-- RIGHT -->
+
+                <div class="product-info">
+
+                    <p id="productTag" class="product-tag"></p>
+
+                    <h1 id="productName">Loading...</h1>
+
+                    <div class="rating-summary">
+
+                        <span class="stars">★★★★★</span>
+
+                        <span id="ratingText">
+                            No reviews yet
+                        </span>
+
+                    </div>
+
+                    <div class="product-price">
+                        ₹<span id="productPrice">0</span>
+                    </div>
+
+                    <p id="productDescription" class="product-description">
+                        Loading product information...
+                    </p>
+
+
+                    <div class="product-features">
+
+                        <div>
+                            🌱
+                            <span>Real Ingredients</span>
+                        </div>
+
+                        <div>
+                            ❄️
+                            <span>Freeze-Dried</span>
+                        </div>
+
+                        <div>
+                            🚫
+                            <span>No Preservatives</span>
+                        </div>
+
+                        <div>
+                            😋
+                            <span>Maximum Crunch</span>
+                        </div>
+
+                    </div>
+
+
+                    <div class="quantity-section">
+
+                        <span>Quantity</span>
+
+                        <div class="quantity-control">
+
+                            <button id="minusBtn">−</button>
+
+                            <span id="quantity">1</span>
+
+                            <button id="plusBtn">+</button>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="product-actions">
+
+                        <button id="cartBtn" class="btn secondary">
+                            🛒 Add to Cart
+                        </button>
+
+                        <button id="buyBtn" class="btn primary">
+                            Buy Now
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- PRODUCT DETAILS -->
+
+        <section class="details-section">
+            <div class="details-container">
+
+                <h2>Product Details</h2>
+                <div class="details-divider"></div>
+
+                <div class="detail-block">
+                    <h3>Description</h3>
+                    <p id="fullDescription">Loading...</p>
+                </div>
+
+                <div class="detail-block">
+                    <h3>Ingredients</h3>
+                    <div id="productIngredients">Loading...</div>
+                </div>
+
+                <div class="detail-block">
+                    <h3>Nutritional Information</h3>
+                    <div id="productNutrition">Loading...</div>
+                </div>
+
+                <div class="detail-block">
+                    <h3>Benefits</h3>
+                    <div id="productBenefits">Loading...</div>
+                </div>
+
+            </div>
+        </section>
+
+
+        <!-- REVIEWS -->
+
+        <section class="reviews-section">
+
+            <div class="reviews-container">
+
+                <h2>Customer Reviews</h2>
+
+                <p class="reviews-subtitle">
+                    See what our customers say about this product.
+                </p>
+
+
+                <div class="review-summary">
+
+                    <div class="rating-number">
+
+                        <strong id="averageRating">
+                            0.0
+                        </strong>
+
+                        <div class="stars">
+                            ★★★★★
+                        </div>
+
+                        <span id="reviewCount">
+                            0 reviews
+                        </span>
+
+                    </div>
+
+
+                    <div class="rating-bars">
+
+                        <div class="rating-row">
+                            <span>5 ★</span>
+                            <div class="rating-bar">
+                                <div style="width:0%"></div>
+                            </div>
+                        </div>
+
+                        <div class="rating-row">
+                            <span>4 ★</span>
+                            <div class="rating-bar">
+                                <div style="width:0%"></div>
+                            </div>
+                        </div>
+
+                        <div class="rating-row">
+                            <span>3 ★</span>
+                            <div class="rating-bar">
+                                <div style="width:0%"></div>
+                            </div>
+                        </div>
+
+                        <div class="rating-row">
+                            <span>2 ★</span>
+                            <div class="rating-bar">
+                                <div style="width:0%"></div>
+                            </div>
+                        </div>
+
+                        <div class="rating-row">
+                            <span>1 ★</span>
+                            <div class="rating-bar">
+                                <div style="width:0%"></div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div id="reviewsList" class="reviews-list">
+
+                    <p class="no-reviews">
+                        No reviews yet. Be the first to review this product!
+                    </p>
+
+                </div>
+
+            </div>
+
+            <div class="write-review">
+                <h3>Write a Review</h3>
+
+                <div class="rating-input">
+                    <span class="star" data-rating="1">★</span>
+                    <span class="star" data-rating="2">★</span>
+                    <span class="star" data-rating="3">★</span>
+                    <span class="star" data-rating="4">★</span>
+                    <span class="star" data-rating="5">★</span>
+                </div>
+
+                <textarea
+                    id="reviewText"
+                    placeholder="Share your experience..."
+                    rows="4">
+                </textarea>
+
+                <button id="submitReview">Submit Review</button>
+
+                <p id="reviewMessage"></p>
+            </div>
+
+        </section>
+
+
+        <!-- YOU MIGHT ALSO LIKE -->
+
+        <section class="recommendations-section">
+
+            <div class="recommendations-container">
+
+                <h2>You Might Also Like</h2>
+
+                <p class="recommendations-subtitle">
+                    More crunchy goodness from Orinic Foods.
+                </p>
+
+                <div id="recommendationsGrid" class="recommendations-grid">
+
+                    <p>Loading products...</p>
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- FOOTER -->
+
+    <footer>
+
+        <p>© 2026 Orinic Foods. All rights reserved.</p>
+
+    </footer>
+
+
+    <!-- SCRIPTS -->
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script src="supabase.js"></script>
+
+    <script src="Script.js"></script>
+
+    <script src="product.js"></script>
+
+</body>
+
+</html>

@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <link
+        rel="icon"
+        type="image/png"
+        href="images/"
+    >
+
+    <link rel="icon" type="image/png" href="images/logo.png">
+
+    <title>My Profile | Orinic Foods</title>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet"
+    >
+
+    <link rel="stylesheet" href="profile.css">
+
+</head>
+
+
+<body>
+
+
+<!-- =========================================
+     HEADER
+========================================= -->
+
+<header class="profile-header">
+
+    <div class="brand">
+
+        <img src="images/logo.png" alt="Orinic Foods">
+
+        <span>Orinic Foods</span>
+
+    </div>
+
+
+    <nav>
+
+        <a href="index.html">
+            Home
+        </a>
+
+        <a href="profile.html" class="active">
+            Profile
+        </a>
+
+        <button id="logoutBtn">
+            Log Out
+        </button>
+
+    </nav>
+
+</header>
+
+
+
+<!-- =========================================
+     PROFILE PAGE
+========================================= -->
+
+<main class="profile-page">
+
+
+    <!-- PAGE TITLE -->
+
+    <section class="page-heading">
+
+        <p class="small-heading">
+            MY ACCOUNT
+        </p>
+
+        <h1>
+            Welcome back, <span id="headingName">...</span>
+        </h1>
+
+        <p>
+            Manage your profile, addresses and orders.
+        </p>
+
+    </section>
+
+
+
+    <!-- PROFILE GRID -->
+
+    <section class="profile-grid">
+
+
+        <!-- =================================
+             PROFILE CARD
+        ================================== -->
+
+        <div class="profile-card">
+
+
+            <div class="card-title">
+
+                <div>
+                    <span class="card-icon">👤</span>
+
+                    <div>
+                        <h2>Personal Information</h2>
+
+                        <p>
+                            Your account details
+                        </p>
+                    </div>
+                </div>
+
+                <button
+                    id="editProfileBtn"
+                    class="outline-btn"
+                >
+                    Edit
+                </button>
+
+            </div>
+
+
+
+            <form id="profileForm">
+
+
+                <div class="input-group">
+
+                    <label>
+                        Full Name
+                    </label>
+
+                    <input
+                        type="text"
+                        id="fullName"
+                        required
+                        disabled
+                    >
+
+                </div>
+
+
+
+                <div class="input-group">
+
+                    <label>
+                        Email Address
+                    </label>
+
+                    <input
+                        type="email"
+                        id="email"
+                        disabled
+                    >
+
+                </div>
+
+
+
+                <div class="input-group">
+
+                    <label>
+                        Phone Number
+                    </label>
+
+                    <input
+                        type="tel"
+                        id="phone"
+                        disabled
+                    >
+
+                </div>
+
+
+                <div class="input-group">
+
+                    <label>
+                        Delivery Address
+                    </label>
+
+                    <input
+                        type="text"
+                        id="address"
+                        placeholder="House / Flat / Street"
+                        disabled
+                    >
+
+                </div>
+
+
+                <div class="two-columns">
+
+                    <div class="input-group">
+
+                        <label>
+                            City
+                        </label>
+
+                        <input
+                            type="text"
+                            id="city"
+                            disabled
+                        >
+
+                    </div>
+
+                    <div class="input-group">
+
+                        <label>
+                            State
+                        </label>
+
+                        <input
+                            type="text"
+                            id="state"
+                            disabled
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <div class="input-group">
+
+                    <label>
+                        Postal Code
+                    </label>
+
+                    <input
+                        type="text"
+                        id="postalCode"
+                        inputmode="numeric"
+                        disabled
+                    >
+
+                </div>
+
+
+                <div
+                    class="profile-actions"
+                    id="profileActions"
+                    style="display:none;"
+                >
+
+                    <button
+                        type="button"
+                        id="cancelProfileBtn"
+                        class="cancel-btn"
+                    >
+                        Cancel
+                    </button>
+
+                    <button
+                        type="submit"
+                        class="save-btn"
+                    >
+                        Save Changes
+                    </button>
+
+                </div>
+
+
+            </form>
+
+        </div>
+
+
+
+        <!-- =================================
+             ACCOUNT CARD
+        ================================== -->
+
+        <div class="account-card">
+
+
+            <div class="account-icon">
+                🌿
+            </div>
+
+
+            <h2>
+                Orinic Foods
+            </h2>
+
+
+            <p>
+                Thank you for being part of our
+                healthy and crunchy journey.
+            </p>
+
+
+            <div class="account-info">
+
+                <div>
+                    <span>Account Status</span>
+                    <strong>Active</strong>
+                </div>
+
+                <div>
+                    <span>Member Since</span>
+                    <strong id="memberSince">
+                        -
+                    </strong>
+                </div>
+
+            </div>
+
+        </div>
+
+
+    </section>
+
+
+
+    <!-- =========================================
+         ADDRESSES
+    ========================================== -->
+
+    <section class="section-card">
+
+
+        <div class="section-heading">
+
+            <div>
+
+                <p class="small-heading">
+                    DELIVERY
+                </p>
+
+                <h2>
+                    My Addresses
+                </h2>
+
+            </div>
+
+
+            <button
+                id="addAddressBtn"
+                class="green-btn"
+            >
+                + Add Address
+            </button>
+
+        </div>
+
+
+        <div
+            id="addressesContainer"
+            class="addresses-container"
+        >
+
+            <div class="loading">
+                Loading addresses...
+            </div>
+
+        </div>
+
+    </section>
+
+
+
+    <!-- =========================================
+         ORDERS
+    ========================================== -->
+
+    <section class="section-card">
+
+
+        <div class="section-heading">
+
+            <div>
+
+                <p class="small-heading">
+                    PURCHASE HISTORY
+                </p>
+
+                <h2>
+                    My Orders
+                </h2>
+
+            </div>
+
+        </div>
+
+
+        <div
+            id="ordersContainer"
+            class="orders-container"
+        >
+
+            <div class="loading">
+                Loading orders...
+            </div>
+
+        </div>
+
+    </section>
+
+
+
+</main>
+
+
+
+<!-- =========================================
+     ADDRESS MODAL
+========================================= -->
+
+<div
+    id="addressModal"
+    class="modal"
+>
+
+    <div class="modal-content">
+
+
+        <div class="modal-header">
+
+            <h2>
+                Add New Address
+            </h2>
+
+            <button
+                id="closeAddressModal"
+                class="close-btn"
+            >
+                ×
+            </button>
+
+        </div>
+
+
+        <form id="addressForm">
+
+
+            <div class="input-group">
+
+                <label>
+                    Full Name
+                </label>
+
+                <input
+                    type="text"
+                    id="addressName"
+                    required
+                >
+
+            </div>
+
+
+            <div class="input-group">
+
+                <label>
+                    Phone Number
+                </label>
+
+                <input
+                    type="tel"
+                    id="addressPhone"
+                    required
+                >
+
+            </div>
+
+
+            <div class="input-group">
+
+                <label>
+                    Address
+                </label>
+
+                <input
+                    type="text"
+                    id="addressLine1"
+                    placeholder="House / Flat / Street"
+                    required
+                >
+
+            </div>
+
+
+            <div class="input-group">
+
+                <label>
+                    Address Line 2
+                </label>
+
+                <input
+                    type="text"
+                    id="addressLine2"
+                    placeholder="Apartment, landmark etc."
+                >
+
+            </div>
+
+
+            <div class="two-columns">
+
+
+                <div class="input-group">
+
+                    <label>
+                        City
+                    </label>
+
+                    <input
+                        type="text"
+                        id="city"
+                        required
+                    >
+
+                </div>
+
+
+                <div class="input-group">
+
+                    <label>
+                        State
+                    </label>
+
+                    <input
+                        type="text"
+                        id="state"
+                        required
+                    >
+
+                </div>
+
+
+            </div>
+
+
+            <div class="two-columns">
+
+
+                <div class="input-group">
+
+                    <label>
+                        Postal Code
+                    </label>
+
+                    <input
+                        type="text"
+                        id="postalCode"
+                        required
+                    >
+
+                </div>
+
+
+                <div class="input-group">
+
+                    <label>
+                        Address Type
+                    </label>
+
+                    <select id="addressType">
+
+                        <option value="Home">
+                            Home
+                        </option>
+
+                        <option value="Work">
+                            Work
+                        </option>
+
+                        <option value="Other">
+                            Other
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+            </div>
+
+
+            <label class="checkbox-label">
+
+                <input
+                    type="checkbox"
+                    id="defaultAddress"
+                >
+
+                Make this my default address
+
+            </label>
+
+
+            <button
+                type="submit"
+                class="green-btn full-btn"
+            >
+                Save Address
+            </button>
+
+
+        </form>
+
+    </div>
+
+</div>
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script src="supabase.js"></script>
+
+<script src="profile.js"></script>
+
+</body>
+
+</html>

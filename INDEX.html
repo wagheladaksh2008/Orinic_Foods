@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/png" href="images/logo.png">
+  <title>Orinic Foods</title>
+
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Google Font (clean premium style) -->
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <meta name="description" content="Orinic Foods - Healthy freeze dried crunchy snacks made from real fruits. Order now on WhatsApp.">
+  <meta name="keywords" content="freeze dried snacks, healthy snacks, crunchy fruits, Orinic Foods">
+  <meta name="author" content="Orinic Foods">
+</head>
+
+<body>
+
+  <!-- NAVBAR -->
+  <header class="navbar">
+    <div class="logo">
+
+    <img src="images/logo.png" alt="Orinic Foods">
+
+    <span>Orinic Foods</span>
+
+    </div>
+
+    <nav>
+      <a href="#">Home</a>
+      <a href="#products">Products</a>
+      <a href="#process">Story</a>
+      <a href="#about">Contact</a>
+    </nav>
+    
+    <div class="cart-icon" onclick="window.location.href='Cart.html'">
+        🛒
+        <span id="cartCount">0</span>
+    </div>
+
+    <div class="profile-icon" onclick="openProfile()">
+      <img src="images/profile_icon.png" alt="Profile">
+    </div>
+
+  </header>
+
+
+  <!-- HERO SECTION -->
+  <section class="hero">
+    
+    <div class="hero-text">
+      <div class="hero-badge">
+      🌱 Made From Real Ingredients
+      </div>
+
+      <h1>
+      Real Fruits.<br>
+      Real Crunch.
+      </h1>
+      <p>Freeze-Dried Snacks Made From Real Fruits & Ingredients</p>
+
+      <div class="hero-buttons">
+        <a href="#products" class="btn primary">Explore Products</a>
+      </div>
+
+      <div class="hero-highlights">
+
+        <span>🌱 Real Ingredients</span>
+
+        <span>🚫 No Preservatives</span>
+
+        <span>❄️ Freeze-Dried</span>
+
+        <span>😋 Maximum Crunch</span>
+
+      </div>
+
+    </div>
+    
+  </section>
+
+  <section class="trust-section">
+
+  <div class="trust-item">
+    <h3>4+</h3>
+    <p>Unique Products</p>
+  </div>
+
+  <div class="trust-item">
+    <h3>100%</h3>
+    <p>Real Ingredients</p>
+  </div>
+
+  <div class="trust-item">
+    <h3>0</h3>
+    <p>Preservatives Added</p>
+  </div>
+
+  <div class="trust-item">
+    <h3>∞</h3>
+    <p>Crunch Factor</p>
+  </div>
+
+  </section>
+
+  <!-- PRODUCTS -->
+  <section id="products" class="products">
+
+    <h2>Crafted For Crunch Lovers</h2>
+
+    <p class="products-subtitle">
+      Explore our range of freeze-dried snacks made from real fruits and ingredients.
+    </p>
+
+    <div class="product-grid" id="productGrid">
+      <p>Loading products...</p>
+    </div>
+
+  </section>
+
+  <section class="benefits">
+
+  <h2>Why Freeze-Dried?</h2>
+
+  <p class="benefits-subtitle">
+    Our freeze-drying process helps preserve the natural taste,
+    texture and goodness of ingredients.
+  </p>
+
+  <div class="benefits-grid">
+
+    <div class="benefit-card">
+      <div class="benefit-icon">❄️</div>
+      <h3>Freeze-Dried Technology</h3>
+      <p>Locks in flavour, crunch and nutrients.</p>
+    </div>
+
+    <div class="benefit-card">
+      <div class="benefit-icon">🌱</div>
+      <h3>Real Ingredients</h3>
+      <p>Made from real fruits and carefully selected ingredients.</p>
+    </div>
+
+    <div class="benefit-card">
+      <div class="benefit-icon">🚫</div>
+      <h3>No Preservatives</h3>
+      <p>Enjoy clean snacking without unnecessary additives.</p>
+    </div>
+
+    <div class="benefit-card">
+      <div class="benefit-icon">😋</div>
+      <h3>Maximum Crunch</h3>
+      <p>Light, crispy and satisfying in every bite.</p>
+    </div>
+
+  </div>
+
+  </section>
+
+  <section id="process" class="process">
+
+  <h2>How We Create The Crunch</h2>
+
+  <p class="process-subtitle">
+    A simple process that preserves taste, texture and natural goodness.
+  </p>
+
+    <div class="process-grid">
+
+      <div class="process-card">
+        <div class="process-icon">🥭</div>
+        <h3>Fresh Ingredients</h3>
+        <p>
+          We start with carefully selected fruits and ingredients.
+        </p>
+      </div>
+
+      <div class="process-card">
+        <div class="process-icon">❄️</div>
+        <h3>Freeze-Drying</h3>
+        <p>
+          Advanced freeze-drying helps retain flavour and crunch.
+        </p>
+      </div>
+
+      <div class="process-card">
+        <div class="process-icon">😋</div>
+        <h3>Enjoy The Crunch</h3>
+        <p>
+          Light, crispy snacks ready to enjoy anytime.
+        </p>
+      </div>
+
+    </div>
+
+  </section>
+
+  <section class="story">
+
+  <div class="story-content">
+
+    <h2>Crunching Nature's Goodness</h2>
+    <p>
+      At Orinic Foods, we believe healthy snacks should never be boring.
+      Through advanced freeze-drying technology, we preserve the natural
+      goodness of fruits while creating a light, crunchy, and enjoyable
+      snacking experience.
+    </p>
+    <div class="story-divider"></div>
+  </div>
+
+  </section>
+
+  <!-- ABOUT -->
+  <section id="about" class="about">
+    <h2>About Us</h2>
+    <p>
+      Orinic Foods brings you healthy freeze-dried snacks made from real fruits and ingredients.
+      Our goal is to deliver crunchy, natural, and nutritious snacking experiences.
+    </p>
+  </section>
+
+  <!-- CONTACT -->
+  <section id="contact" class="contact">
+    <h2>Contact</h2>
+
+    <p>WhatsApp: +91 93565 13458</p>
+    <p>Email: wagheladaksh878@gmail.com</p>
+  </section>
+
+
+  <!-- FOOTER -->
+  <footer>
+    <p>© 2026 Orinic Foods. All rights reserved.</p>
+  </footer>
+
+<a class="whatsapp-float" href="https://wa.me/919356154943" target="_blank">
+💬
+</a>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase.js"></script>
+<script src="Script.js"></script>
+<script src="product.js"></script>
+</body>
+</html>

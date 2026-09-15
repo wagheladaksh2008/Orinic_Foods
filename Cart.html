@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="icon" type="image/png" href="images/logo.png">
+
+    <title>Cart | Orinic Foods</title>
+
+    <link rel="stylesheet" href="product.css">
+
+    <style>
+        .cart-section {
+            padding: 60px 7%;
+            min-height: 70vh;
+        }
+
+        .cart-container {
+            max-width: 1100px;
+            margin: auto;
+        }
+
+        .cart-container h1 {
+            font-family: 'DM Serif Display', serif;
+            font-size: 48px;
+            margin-bottom: 35px;
+        }
+
+        .cart-item {
+            display: grid;
+            grid-template-columns: 110px 1fr auto;
+            gap: 25px;
+            align-items: center;
+            background: white;
+            padding: 20px;
+            border-radius: 18px;
+            border: 1px solid #eee;
+            margin-bottom: 15px;
+        }
+
+        .cart-item img {
+            width: 100px;
+            height: 100px;
+            object-fit: contain;
+            background: #F6F0E6;
+            border-radius: 12px;
+        }
+
+        .cart-item h3 {
+            margin-bottom: 8px;
+        }
+
+        .cart-price {
+            color: #3A7D44;
+            font-weight: 700;
+        }
+
+        .cart-quantity {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .cart-quantity button {
+            width: 32px;
+            height: 32px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 7px;
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        .remove-btn {
+            border: none;
+            background: none;
+            color: #c44;
+            cursor: pointer;
+        }
+
+        .cart-total {
+            margin-top: 35px;
+            margin-left: auto;
+            max-width: 350px;
+            background: #F2EBE0;
+            padding: 25px;
+            border-radius: 18px;
+        }
+
+        .cart-total-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+
+        .cart-total strong {
+            font-size: 22px;
+        }
+
+        .checkout-btn {
+            width: 100%;
+            margin-top: 15px;
+            border: none;
+            border-radius: 12px;
+            padding: 15px;
+            background: #3A7D44;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .empty-cart {
+            text-align: center;
+            padding: 80px 20px;
+            color: #777;
+        }
+
+        @media (max-width: 768px) {
+            .cart-section {
+                padding: 40px 20px;
+            }
+
+            .cart-container h1 {
+                font-size: 38px;
+            }
+
+            .cart-item {
+                grid-template-columns: 80px 1fr;
+                gap: 15px;
+            }
+
+            .cart-item img {
+                width: 80px;
+                height: 80px;
+            }
+
+            .remove-btn {
+                grid-column: 2;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header class="navbar">
+
+    <div class="logo">
+        <img src="images/logo.png" alt="Orinic Foods">
+        <span>Orinic Foods</span>
+    </div>
+
+    <nav>
+        <a href="INDEX.html">Home</a>
+        <a href="INDEX.html#products">Products</a>
+        <a href="INDEX.html#story">Story</a>
+        <a href="INDEX.html#contact">Contact</a>
+    </nav>
+
+    <div class="profile-icon" onclick="openProfile()">
+        <img src="images/profile_icon.png" alt="Profile">
+    </div>
+
+</header>
+
+
+<section class="cart-section">
+
+    <div class="cart-container">
+
+        <h1>Your Cart 🛒</h1>
+
+        <div id="cartItems"></div>
+
+        <div id="cartSummary"></div>
+
+    </div>
+
+</section>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase.js"></script>
+<script src="Script.js"></script>
+<script src="cart.js"></script>
+
+</body>
+</html>

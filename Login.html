@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="icon" type="image/png" href="images/logo.png">
+
+  <title>Login | Orinic Foods</title>
+
+  <!-- Orinic Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="login.css">
+</head>
+
+<body>
+
+  <main class="login-page">
+
+    <div class="login-card">
+
+      <div class="login-logo">
+        <img src="images/logo.png" alt="Orinic Foods">
+        <span>Orinic Foods</span>
+    </div>
+
+    <div class="login-header">
+        <h1>Welcome back</h1>
+        <p>Sign in to your Orinic account</p>
+    </div>
+
+
+      <!-- LOGIN FORM -->
+      <form id="loginForm">
+
+        <!-- EMAIL -->
+        <div class="form-group">
+
+          <label for="email">
+            Email Address
+          </label>
+
+          <input
+            type="email"
+            id="email"
+            name="email"
+            placeholder="you@example.com"
+            required
+          >
+
+        </div>
+
+
+        <!-- PASSWORD -->
+        <div class="form-group">
+
+          <label for="password">
+            Password
+          </label>
+
+          <div class="password-wrapper">
+
+            <input
+              type="password"
+              id="password"
+              name="password"
+              placeholder="••••••••"
+              required
+            >
+
+            <button
+              type="button"
+              id="togglePassword"
+              class="password-toggle"
+              aria-label="Show password"
+            >
+              👁
+            </button>
+
+          </div>
+
+        </div>
+
+
+        <!-- FORGOT PASSWORD -->
+        <div class="forgot-password">
+
+          <a href="#">
+            Forgot password?
+          </a>
+
+        </div>
+
+
+        <!-- SIGN IN -->
+        <button
+          type="submit"
+          class="login-btn"
+        >
+          <span>Log In</span>
+          <span class="arrow">→</span>
+        </button>
+
+      </form>
+
+
+      <!-- SIGNUP -->
+      <div class="signup-link">
+
+        <span>New to Orinic?</span>
+
+        <a href="Signup.html">
+          Create account
+        </a>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase.js"></script>
+  <script src="login.js"></script>
+
+</body>
+
+</html>

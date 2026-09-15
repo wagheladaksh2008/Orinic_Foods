@@ -1,0 +1,419 @@
+/* =========================================
+   ORINIC FOODS - LOGIN
+   Main Theme
+========================================= */
+
+:root {
+
+  --orinic-green: #173f32;
+  --orinic-green-light: #2f7d4b;
+
+  --cream: #f7f3eb;
+  --cream-dark: #eee8dc;
+
+  --black: #111111;
+  --text: #163d32;
+  --muted: #6f8b83;
+
+  --white: #ffffff;
+
+  --border: #173f32;
+
+}
+
+
+/* =========================================
+   RESET
+========================================= */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+
+body {
+
+  font-family: "Inter", sans-serif;
+
+  background:
+    radial-gradient(
+      circle at 70% 25%,
+      rgba(224, 193, 134, 0.16),
+      transparent 35%
+    ),
+    radial-gradient(
+      circle at 10% 90%,
+      rgba(210, 226, 217, 0.25),
+      transparent 35%
+    ),
+    var(--cream);
+
+  color: var(--text);
+
+  min-height: 100vh;
+
+}
+
+
+/* =========================================
+   LOGIN PAGE
+========================================= */
+
+.login-page {
+
+  min-height: 100vh;
+
+  display: flex;
+
+  justify-content: center;
+
+  align-items: center;
+
+  padding: 30px 20px;
+
+}
+
+
+/* =========================================
+   LOGIN CARD
+========================================= */
+
+.login-card {
+    width: 520px;
+    max-width: 90%;
+    margin: 0 auto;
+    padding: 45px 50px;
+    box-sizing: border-box;
+}
+
+.login-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    margin-bottom: 35px;
+}
+
+.login-logo img {
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+}
+
+.login-logo span {
+    font-family: "DM Serif Display", serif;
+    font-size: 32px;
+    font-weight: 600;
+    color: #123f32;
+}
+
+.login-header {
+    text-align: center;
+    margin-bottom: 45px;
+}
+
+.login-header h1 {
+    margin: 0;
+    font-family: "DM Serif Display", serif;
+    font-size: 38px;
+}
+
+.login-header p {
+    margin-top: 8px;
+    font-size: 20px;
+    color: #4b9f8e;
+}
+
+/* =========================================
+   FORM
+========================================= */
+
+.form-group {
+
+  margin-bottom: 22px;
+
+}
+
+
+.form-group label {
+
+  display: block;
+
+  margin-bottom: 9px;
+
+  font-size: 17px;
+
+  font-weight: 500;
+
+  color: var(--text);
+
+}
+
+
+.form-group input {
+
+  width: 100%;
+
+  height: 58px;
+
+  padding: 0 18px;
+
+  border: 1px solid #d7dcd8;
+
+  border-radius: 14px;
+
+  background: var(--white);
+
+  font-family: "Inter", sans-serif;
+
+  font-size: 16px;
+
+  color: var(--black);
+
+  outline: none;
+
+  transition: 0.2s ease;
+
+}
+
+
+.form-group input::placeholder {
+
+  color: #8aa09a;
+
+}
+
+
+.form-group input:focus {
+
+  border-color: var(--orinic-green);
+
+  box-shadow: 0 0 0 3px rgba(23, 63, 50, 0.08);
+
+}
+
+
+/* =========================================
+   PASSWORD
+========================================= */
+
+.password-wrapper {
+
+  position: relative;
+
+}
+
+
+.password-wrapper input {
+
+  padding-right: 55px;
+
+}
+
+
+.password-toggle {
+
+  position: absolute;
+
+  right: 16px;
+
+  top: 50%;
+
+  transform: translateY(-50%);
+
+  border: none;
+
+  background: transparent;
+
+  cursor: pointer;
+
+  font-size: 18px;
+
+  opacity: 0.7;
+
+}
+
+
+.password-toggle:hover {
+
+  opacity: 1;
+
+}
+
+
+/* =========================================
+   FORGOT PASSWORD
+========================================= */
+
+.forgot-password {
+
+  text-align: right;
+
+  margin-top: -8px;
+
+  margin-bottom: 20px;
+
+}
+
+
+.forgot-password a {
+
+  color: #267c69;
+
+  text-decoration: none;
+
+  font-size: 15px;
+
+}
+
+
+.forgot-password a:hover {
+
+  text-decoration: underline;
+
+}
+
+
+/* =========================================
+   SIGN IN BUTTON
+========================================= */
+
+.login-btn {
+
+  width: 100%;
+
+  height: 57px;
+
+  border: none;
+
+  border-radius: 14px;
+
+  background: var(--orinic-green);
+
+  color: white;
+
+  font-family: "Inter", sans-serif;
+
+  font-size: 17px;
+
+  font-weight: 600;
+
+  cursor: pointer;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 12px;
+
+  transition: 0.25s ease;
+
+}
+
+
+.login-btn:hover {
+
+  background: #0f3026;
+
+  transform: translateY(-1px);
+
+}
+
+
+.login-btn .arrow {
+
+  font-size: 22px;
+
+}
+
+/* =========================================
+   SIGNUP LINK
+========================================= */
+
+.signup-link {
+
+  text-align: center;
+
+  margin-top: 30px;
+
+  font-size: 16px;
+
+  color: #398d78;
+
+}
+
+
+.signup-link a {
+
+  color: var(--text);
+
+  font-weight: 600;
+
+  text-decoration: none;
+
+}
+
+
+.signup-link a:hover {
+
+  text-decoration: underline;
+
+}
+
+/* =========================================
+   MOBILE
+========================================= */
+
+@media (max-width: 600px) {
+
+  .login-page {
+
+    padding: 15px;
+
+  }
+
+
+  .login-card {
+        width: 94%;
+        padding: 35px 25px;
+    }
+
+    .login-logo {
+        gap: 10px;
+    }
+
+    .login-logo img {
+        width: 42px;
+        height: 42px;
+    }
+
+    .login-logo span {
+        font-size: 27px;
+    }
+
+    .login-header h1 {
+        font-size: 32px;
+    }
+
+    .login-header p {
+        font-size: 17px;
+    }
+
+  .login-heading h1 {
+
+    font-size: 29px;
+
+  }
+
+
+  .login-heading p {
+
+    font-size: 15px;
+
+  }
+
+}

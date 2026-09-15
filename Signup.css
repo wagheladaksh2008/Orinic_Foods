@@ -1,0 +1,448 @@
+/* =========================================
+   ORINIC FOODS - SIGNUP
+========================================= */
+
+:root {
+
+  --orinic-green: #173f32;
+  --cream: #f7f3eb;
+  --black: #111111;
+  --text: #163d32;
+  --muted: #6f8b83;
+  --white: #ffffff;
+
+}
+
+
+/* =========================================
+   RESET
+========================================= */
+
+* {
+
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+
+}
+
+
+/* =========================================
+   BODY
+========================================= */
+
+body {
+
+  font-family: "Inter", sans-serif;
+
+  background:
+    radial-gradient(
+      circle at 70% 25%,
+      rgba(224, 193, 134, 0.16),
+      transparent 35%
+    ),
+    radial-gradient(
+      circle at 10% 90%,
+      rgba(210, 226, 217, 0.25),
+      transparent 35%
+    ),
+    var(--cream);
+
+  color: var(--text);
+
+  min-height: 100vh;
+
+}
+
+
+/* =========================================
+   SIGNUP PAGE
+========================================= */
+
+.signup-page {
+
+  min-height: 100vh;
+
+  display: flex;
+
+  justify-content: center;
+
+  align-items: center;
+
+  padding: 40px 20px;
+
+}
+
+
+/* =========================================
+   SIGNUP CARD
+========================================= */
+
+.signup-card {
+
+  width: 520px;
+
+  max-width: 90%;
+
+  padding: 45px 50px;
+
+}
+
+
+/* =========================================
+   LOGO
+========================================= */
+
+.signup-logo {
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 14px;
+
+  margin-bottom: 35px;
+
+}
+
+
+.signup-logo img {
+
+  width: 48px;
+
+  height: 48px;
+
+  object-fit: contain;
+
+}
+
+
+.signup-logo span {
+
+  font-family: "DM Serif Display", serif;
+
+  font-size: 32px;
+
+  font-weight: 600;
+
+  color: #123f32;
+
+}
+
+
+/* =========================================
+   HEADER
+========================================= */
+
+.signup-header {
+
+  text-align: center;
+
+  margin-bottom: 35px;
+
+}
+
+
+.signup-header h1 {
+
+  font-family: "DM Serif Display", serif;
+
+  font-size: 36px;
+
+  color: var(--black);
+
+}
+
+
+.signup-header p {
+
+  margin-top: 8px;
+
+  font-size: 18px;
+
+  color: #4b9f8e;
+
+}
+
+
+/* =========================================
+   FORM
+========================================= */
+
+.form-group {
+
+  margin-bottom: 19px;
+
+}
+
+
+.form-group label {
+
+  display: block;
+
+  margin-bottom: 9px;
+
+  font-size: 16px;
+
+  font-weight: 500;
+
+  color: var(--text);
+
+}
+
+
+.form-group input {
+
+  width: 100%;
+
+  height: 56px;
+
+  padding: 0 18px;
+
+  border: 1px solid #d7dcd8;
+
+  border-radius: 14px;
+
+  background: var(--white);
+
+  font-family: "Inter", sans-serif;
+
+  font-size: 16px;
+
+  color: var(--black);
+
+  outline: none;
+
+  transition: 0.2s ease;
+
+}
+
+
+.form-group input::placeholder {
+
+  color: #8aa09a;
+
+}
+
+
+.form-group input:focus {
+
+  border-color: var(--orinic-green);
+
+  box-shadow:
+    0 0 0 3px
+    rgba(23, 63, 50, 0.08);
+
+}
+
+
+/* =========================================
+   PASSWORD
+========================================= */
+
+.password-wrapper {
+
+  position: relative;
+
+}
+
+
+.password-wrapper input {
+
+  padding-right: 55px;
+
+}
+
+
+.password-toggle {
+
+  position: absolute;
+
+  right: 16px;
+
+  top: 50%;
+
+  transform: translateY(-50%);
+
+  border: none;
+
+  background: transparent;
+
+  cursor: pointer;
+
+  font-size: 18px;
+
+  opacity: 0.7;
+
+}
+
+
+.password-toggle:hover {
+
+  opacity: 1;
+
+}
+
+
+/* =========================================
+   SIGNUP BUTTON
+========================================= */
+
+.signup-btn {
+
+  width: 100%;
+
+  height: 57px;
+
+  margin-top: 5px;
+
+  border: none;
+
+  border-radius: 14px;
+
+  background: var(--orinic-green);
+
+  color: white;
+
+  font-family: "Inter", sans-serif;
+
+  font-size: 17px;
+
+  font-weight: 600;
+
+  cursor: pointer;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 12px;
+
+  transition: 0.25s ease;
+
+}
+
+
+.signup-btn:hover {
+
+  background: #0f3026;
+
+  transform: translateY(-1px);
+
+}
+
+
+.signup-btn .arrow {
+
+  font-size: 22px;
+
+}
+
+
+/* =========================================
+   LOGIN LINK
+========================================= */
+
+.login-link {
+
+  text-align: center;
+
+  margin-top: 28px;
+
+  font-size: 16px;
+
+  color: #398d78;
+
+}
+
+
+.login-link a {
+
+  color: var(--text);
+
+  font-weight: 600;
+
+  text-decoration: none;
+
+}
+
+
+.login-link a:hover {
+
+  text-decoration: underline;
+
+}
+
+
+/* =========================================
+   MOBILE
+========================================= */
+
+@media (max-width: 600px) {
+
+  .signup-page {
+
+    padding: 20px 15px;
+
+    align-items: flex-start;
+
+  }
+
+
+  .signup-card {
+
+    width: 94%;
+
+    padding: 35px 25px;
+
+  }
+
+
+  .signup-logo {
+
+    gap: 10px;
+
+  }
+
+
+  .signup-logo img {
+
+    width: 42px;
+
+    height: 42px;
+
+  }
+
+
+  .signup-logo span {
+
+    font-size: 27px;
+
+  }
+
+
+  .signup-header h1 {
+
+    font-size: 31px;
+
+  }
+
+
+  .signup-header p {
+
+    font-size: 16px;
+
+  }
+
+
+  .form-group input {
+
+    height: 54px;
+
+  }
+
+}
