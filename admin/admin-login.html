@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Admin Login | Orinic Foods</title>
+
+    <link rel="stylesheet" href="admin-login.css">
+</head>
+
+<body>
+
+    <main class="admin-login-page">
+
+        <div class="login-card">
+
+            <div class="logo">
+                <img src="../images/logo.png" alt="Orinic Foods">
+                <span>Orinic Foods</span>
+            </div>
+
+            <p class="admin-label">
+                ADMIN PANEL
+            </p>
+
+            <h1>Welcome back</h1>
+
+            <p class="subtitle">
+                Sign in to manage your Orinic Foods store.
+            </p>
+
+            <form id="adminLoginForm">
+
+                <div class="form-group">
+
+                    <label>Email Address</label>
+
+                    <input
+                        type="email"
+                        id="email"
+                        placeholder="admin@example.com"
+                        required
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>Password</label>
+
+                    <input
+                        type="password"
+                        id="password"
+                        placeholder="Enter password"
+                        required
+                    >
+
+                </div>
+
+
+                <button type="submit" id="loginBtn">
+                    Sign In →
+                </button>
+
+            </form>
+
+            <p id="loginMessage"></p>
+
+            <a href="../INDEX.html" class="back-link">
+                ← Back to Orinic Foods
+            </a>
+
+        </div>
+
+    </main>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script src="../supabase.js"></script>
+
+    <script src="admin-login.js"></script>
+
+</body>
+
+</html>
