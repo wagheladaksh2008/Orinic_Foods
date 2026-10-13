@@ -1154,11 +1154,3 @@ html {
 
     transition: all 0.2s ease;
 }
-
-.admin-nav-btn:hover {
-    background: #245a40;
-
-    border-color: #245a40;
-
-    transform: translateY(-1px);
-}
