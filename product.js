@@ -250,7 +250,9 @@ if (cartBtn) {
 
         let cart = JSON.parse(localStorage.getItem("orinicCart")) || [];
 
-        const existing = cart.find(item => item.id === currentProduct.id);
+        const existing = cart.find(
+            item => String(item.id) === String(currentProduct.id)
+        );
 
         if (existing) {
             existing.quantity += quantity;
@@ -264,7 +266,11 @@ if (cartBtn) {
             });
         }
 
+        // Save updated cart
         localStorage.setItem("orinicCart", JSON.stringify(cart));
+
+        // Immediately update cart icon count
+        updateCartCount();
 
         alert(`${currentProduct.name} added to cart!`);
     });
