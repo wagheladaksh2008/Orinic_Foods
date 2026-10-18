@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/png" href="logo.png">
+  <title>Orinic Foods</title>
+
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Google Font (clean premium style) -->
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <meta name="description" content="Orinic Foods - Healthy freeze dried crunchy snacks made from real fruits. Order now on WhatsApp.">
+  <meta name="keywords" content="freeze dried snacks, healthy snacks, crunchy fruits, Orinic Foods">
+  <meta name="author" content="Orinic Foods">
+</head>
+
+<body>
+
+  <div id="detailsModal" class="modal">
+
+  <div class="modal-content product-modal">
+    <button id="prevProduct"
+    class="product-switch-btn product-left">
+    ❮
+    </button>
+
+    <button id="nextProduct"
+    class="product-switch-btn product-right">
+    ❯
+    </button>
+
+    <span class="close-btn"
+    onclick="closeDetails()">✖</span>
+
+    <div class="product-layout">
+
+            <div class="product-gallery">
+
+        <button id="prevImage" class="gallery-btn gallery-left">
+          ❮
+        </button>
+
+        <img id="detailImage"
+        class="main-product-image"
+        src=""
+        alt="Product Image">
+
+        <button id="nextImage" class="gallery-btn gallery-right">
+          ❯
+        </button>
+
+        <div class="gallery-dots">
+          <span class="dot active"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
+        </div>
+
+      </div>
+
+      <div class="product-info">
+
+        <h2 id="detailTitle"></h2>
+
+        <p id="detailPrice" class="price"></p>
+
+        <p id="detailTagline"
+        class="tagline"></p>
+
+        <p id="detailDescription"
+        class="description"></p>
+
+        <div class="benefits-list"
+        id="detailBenefits">
+        </div>
+
+        <button id="detailOrderBtn"
+        class="btn primary">
+          Order on WhatsApp →
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  </div>
+
+  <!-- WHATSAPP ORDER MODAL -->
+  <div id="orderModal" class="modal">
+
+    <div class="modal-content">
+
+      <h2>Place Your Order</h2>
+
+      <p class="order-subtitle">
+      Fill in your details and we'll connect with you on WhatsApp.
+      </p>
+
+      <input type="text" id="productName" placeholder="Product Name">
+      <input type="number" id="quantity" placeholder="Quantity">
+      <input type="text" id="customerName" class="full-width" placeholder="Your Name">
+      <input type="text" id="phone" placeholder="Phone Number">
+      <input type="text" id="address" placeholder="Delivery Address">
+
+      <button class="send-btn" onclick="sendWhatsApp()">Send on WhatsApp</button>
+      <button class="close-order-btn" onclick="closeModal()">Close</button>
+
+    </div>
+
+  </div>
+  <!-- NAVBAR -->
+  <header class="navbar">
+    <div class="logo">
+
+    <img src="logo.png" alt="Orinic Foods">
+
+    <span>Orinic Foods</span>
+
+    </div>
+
+    <nav>
+      <a href="#">Home</a>
+      <a href="#products">Products</a>
+      <a href="#process">Story</a>
+      <a href="#about">Contact</a>
+    </nav>
+  </header>
+
+
+  <!-- HERO SECTION -->
+  <section class="hero">
+    
+    <div class="hero-text">
+      <div class="hero-badge">
+      🌱 Made From Real Ingredients
+      </div>
+
+      <h1>
+      Real Fruits.<br>
+      Real Crunch.
+      </h1>
+      <p>Freeze-Dried Snacks Made From Real Fruits & Ingredients</p>
+
+      <div class="hero-buttons">
+        <a href="#products" class="btn primary">Explore Products</a>
+        <a href="https://wa.me/9284931474" target="_blank" class="btn secondary">Order on WhatsApp</a>
+      </div>
+
+      <div class="hero-highlights">
+
+        <span>🌱 Real Ingredients</span>
+
+        <span>🚫 No Preservatives</span>
+
+        <span>❄️ Freeze-Dried</span>
+
+        <span>😋 Maximum Crunch</span>
+
+      </div>
+
+    </div>
+    
+  </section>
+
+  <section class="trust-section">
+
+  <div class="trust-item">
+    <h3>4+</h3>
+    <p>Unique Products</p>
+  </div>
+
+  <div class="trust-item">
+    <h3>100%</h3>
+    <p>Real Ingredients</p>
+  </div>
+
+  <div class="trust-item">
+    <h3>0</h3>
+    <p>Preservatives Added</p>
+  </div>
+
+  <div class="trust-item">
+    <h3>∞</h3>
+    <p>Crunch Factor</p>
+  </div>
+
+  </section>
+
+  <!-- PRODUCTS -->
+  <section id="products" class="products">
+
+    <h2>Crafted For Crunch Lovers</h2>
+
+    <p class="products-subtitle">
+    Explore our range of freeze-dried snacks made from real fruits and ingredients.
+    </p>
+
+    <div class="product-grid">
+
+      <div class="card"
+        onclick="showDetails('mango')">
+        <img src="Mango_pro.png" alt="Mango Crunchy Fruits">
+        <h3>Mango Crunchy Fruits</h3>
+        <p class="product-tag">
+        Natural Vitamin C
+        </p>
+
+        <p>₹149</p>
+        
+        <button class="btn primary"
+        onclick="event.stopPropagation(); showDetails('mango')">
+        Order Now
+        </button>
+
+      </div>
+
+      <div class="card"
+        onclick="showDetails('jamun')">
+        <img src="Jamun_pro.png" alt="Jamun Crunchy Fruits">
+        <h3>Jamun Crunchy Fruits</h3>
+        <p class="product-tag">
+        Sugar Controller
+        </p>
+        <p>₹149</p>
+        
+        <button class="btn primary"
+        onclick="event.stopPropagation(); showDetails('jamun')">
+        Order Now
+        </button>
+      </div>
+
+      <div class="card"
+        onclick="showDetails('coco')">
+        <img src="Coco_pro.png" alt="Coco Crunch">
+        <h3>Coco Crunch</h3>
+        <p class="product-tag">
+        Coco Crunch
+        </p>
+        <p>₹199</p>
+        
+        <button class="btn primary"
+        onclick="event.stopPropagation(); showDetails('coco')">
+        Order Now
+        </button>
+        </div>
+
+      <div class="card"
+        onclick="showDetails('corn')">
+        <img src="Corn_pro.png" alt="Cream & Onion Corn">
+        <h3>Cream & Onion Corn</h3>
+        <p class="product-tag">
+        Rich Fiber
+        </p>
+
+        <p>₹99</p>
+                
+        <button class="btn primary"
+        onclick="event.stopPropagation(); showDetails('corn')">
+        Order Now
+        </button>
+        </div>
+
+    </div>
+  </section>
+
+  <section class="benefits">
+
+  <h2>Why Freeze-Dried?</h2>
+
+  <p class="benefits-subtitle">
+    Our freeze-drying process helps preserve the natural taste,
+    texture and goodness of ingredients.
+  </p>
+
+  <div class="benefits-grid">
+
+    <div class="benefit-card">
+      <div class="benefit-icon">❄️</div>
+      <h3>Freeze-Dried Technology</h3>
+      <p>Locks in flavour, crunch and nutrients.</p>
+    </div>
+
+    <div class="benefit-card">
+      <div class="benefit-icon">🌱</div>
+      <h3>Real Ingredients</h3>
+      <p>Made from real fruits and carefully selected ingredients.</p>
+    </div>
+
+    <div class="benefit-card">
+      <div class="benefit-icon">🚫</div>
+      <h3>No Preservatives</h3>
+      <p>Enjoy clean snacking without unnecessary additives.</p>
+    </div>
+
+    <div class="benefit-card">
+      <div class="benefit-icon">😋</div>
+      <h3>Maximum Crunch</h3>
+      <p>Light, crispy and satisfying in every bite.</p>
+    </div>
+
+  </div>
+
+  </section>
+
+  <section id="process" class="process">
+
+  <h2>How We Create The Crunch</h2>
+
+  <p class="process-subtitle">
+    A simple process that preserves taste, texture and natural goodness.
+  </p>
+
+    <div class="process-grid">
+
+      <div class="process-card">
+        <div class="process-icon">🥭</div>
+        <h3>Fresh Ingredients</h3>
+        <p>
+          We start with carefully selected fruits and ingredients.
+        </p>
+      </div>
+
+      <div class="process-card">
+        <div class="process-icon">❄️</div>
+        <h3>Freeze-Drying</h3>
+        <p>
+          Advanced freeze-drying helps retain flavour and crunch.
+        </p>
+      </div>
+
+      <div class="process-card">
+        <div class="process-icon">😋</div>
+        <h3>Enjoy The Crunch</h3>
+        <p>
+          Light, crispy snacks ready to enjoy anytime.
+        </p>
+      </div>
+
+    </div>
+
+  </section>
+
+  <section class="story">
+
+  <div class="story-content">
+
+    <h2>Crunching Nature's Goodness</h2>
+    <p>
+      At Orinic Foods, we believe healthy snacks should never be boring.
+      Through advanced freeze-drying technology, we preserve the natural
+      goodness of fruits while creating a light, crunchy, and enjoyable
+      snacking experience.
+    </p>
+    <div class="story-divider"></div>
+  </div>
+
+  </section>
+
+  <!-- ABOUT -->
+  <section id="about" class="about">
+    <h2>About Us</h2>
+    <p>
+      Orinic Foods brings you healthy freeze-dried snacks made from real fruits and ingredients.
+      Our goal is to deliver crunchy, natural, and nutritious snacking experiences.
+    </p>
+  </section>
+
+  <!-- CONTACT -->
+  <section id="contact" class="contact">
+    <h2>Contact</h2>
+
+    <p>WhatsApp: +91 93565 13458</p>
+    <p>Email: wagheladaksh878@gmail.com</p>
+  </section>
+
+
+  <!-- FOOTER -->
+  <footer>
+    <p>© 2026 Orinic Foods. All rights reserved.</p>
+  </footer>
+
+<a class="whatsapp-float" href="https://wa.me/9284931474" target="_blank">
+💬
+</a>
+
+<script src="script.js"></script>
+</body>
+</html>

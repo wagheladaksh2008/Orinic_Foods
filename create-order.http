@@ -1,0 +1,17 @@
+POST https://YOUR_PROJECT_REF.supabase.co/functions/v1/create-razorpay-order
+Content-Type: application/json
+apikey: sb_publishable_PcoxmRnEawC4SZSDMG-tew_pF-ZLubM
+Authorization: Bearer {{eyJhbGciOiJFUzI1NiIsImtpZCI6IjQxNjE4MzcxLWJiYTQtNDdhMi1hNTYxLTVjZGU1ODQ5ZWY2YSIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL2RyZ3Z5enBnd29obmlhZWJybnZoLnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiI0ZjgyNzBkYi0yNmVlLTRjZDAtOGQxMy1iZmQ2YTQxZDQ1ZTIiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzkyMzA4NjM5LCJpYXQiOjE3OTIzMDUwMzksImVtYWlsIjoid2FnaGVsYWRha3NoODc4QGdtYWlsLmNvbSIsInBob25lIjoiIiwiYXBwX21ldGFkYXRhIjp7InByb3ZpZGVyIjoiZW1haWwiLCJwcm92aWRlcnMiOlsiZW1haWwiXX0sInVzZXJfbWV0YWRhdGEiOnsiZW1haWwiOiJ3YWdoZWxhZGFrc2g4NzhAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImZ1bGxfbmFtZSI6IkRha3NoIFJhamVzaCBXYWdoZWxhIiwicGhvbmUiOiI5MzU2NTEzNDU4IiwicGhvbmVfdmVyaWZpZWQiOmZhbHNlLCJzdWIiOiI0ZjgyNzBkYi0yNmVlLTRjZDAtOGQxMy1iZmQ2YTQxZDQ1ZTIifSwicm9sZSI6ImF1dGhlbnRpY2F0ZWQiLCJhYWwiOiJhYWwxIiwiYW1yIjpbeyJtZXRob2QiOiJwYXNzd29yZCIsInRpbWVzdGFtcCI6MTc5MjI1NzM5NX1dLCJzZXNzaW9uX2lkIjoiZDhiNzNmMTgtMTJlMy00MmZmLWExYjItOWZhZTBkMzA4MTk4IiwiaXNfYW5vbnltb3VzIjpmYWxzZX0.08rJALg1YZqCAonHOd7uH67BTpk3Q5OXqtARmrWOUxWMlg5zXCxND2lmUUCxm2UWm965XV2BrnD3cDqSKgZ7zQ
+}}
+
+{
+  "items": [
+    {
+      "product_id": "8e5ac09c-7e51-4ca6-86f8-7b1d9937d778",
+      "quantity": 1
+    }
+  ],
+  "customer_name": "Test Customer",
+  "phone": "9999999999",
+  "address": "Test Address"
+}
