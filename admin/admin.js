@@ -15,7 +15,9 @@ let forecastChart = null;
    INITIALIZATION
 ===================================================== */
 
-/*document.addEventListener("DOMContentLoaded", async () => {
+document.addEventListener("DOMContentLoaded", async () => {
+
+    console.log("Orinic Admin Panel Initializing...");
 
     await checkAdmin();
 
@@ -23,32 +25,49 @@ let forecastChart = null;
 
     setupButtons();
 
-    await loadDashboard();
+    // Load Dashboard
+    try {
+        await loadDashboard();
+        console.log("Dashboard loaded successfully");
+    } catch (error) {
+        console.error("Dashboard loading failed:", error);
+    }
 
-    await loadProducts();
+    // Load Products
+    try {
+        await loadProducts();
+        console.log("Products loaded successfully");
+    } catch (error) {
+        console.error("Products loading failed:", error);
+    }
 
-    await loadOrders();
+    // Load Orders
+    try {
+        await loadOrders();
+        console.log("Orders loaded successfully");
+    } catch (error) {
+        console.error("Orders loading failed:", error);
+    }
 
-    await loadCustomers();
+    // Load Customers
+    try {
+        await loadCustomers();
 
-    await loadPayments();
+        await loadPayments();
+        console.log("Customers loaded successfully");
+    } catch (error) {
+        console.error("Customers loading failed:", error);
+    }
 
-    await loadReviews();
+    // Load Reviews
+    try {
+        await loadReviews();
+        console.log("Reviews loaded successfully");
+    } catch (error) {
+        console.error("Reviews loading failed:", error);
+    }
 
-    await loadReports();
-
-    await loadAnalytics();
-
-});*/
-
-document.addEventListener("DOMContentLoaded", async () => {
-
-    // TEMPORARY FRONTEND TEST
-    // await checkAdmin();
-
-    setupNavigation();
-
-    setupButtons();
+    console.log("Admin Dashboard Initialization Complete!");
 
 });
 /* =====================================================
@@ -57,52 +76,81 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 async function checkAdmin() {
 
-    const {
-        data: { user },
-        error
-    } = await supabaseClient.auth.getUser();
+    try {
 
+        // Check logged-in Supabase user
+        const {
+            data: { user },
+            error
+        } = await supabaseClient.auth.getUser();
 
-    if (error || !user) {
+        if (error || !user) {
 
-        window.location.href =
-            "admin-login.html";
+            window.location.replace("../Login.html");
 
-        return;
+            return false;
+
+        }
+
+        // Verify administrator permission
+        const {
+            data: admin,
+            error: adminError
+        } = await supabaseClient
+            .from("admin_users")
+            .select("id, full_name, email")
+            .eq("id", user.id)
+            .maybeSingle();
+
+        if (adminError) {
+
+            console.error(
+                "Admin verification error:",
+                adminError
+            );
+
+            document.body.innerHTML =
+                "<h2>Unable to verify administrator access. Please try again.</h2>";
+
+            return false;
+
+        }
+
+        if (!admin) {
+
+            await supabaseClient.auth.signOut();
+
+            window.location.replace("../Login.html");
+
+            return false;
+
+        }
+
+        // Display administrator name
+        const adminName =
+            document.getElementById("adminName");
+
+        if (adminName) {
+
+            adminName.textContent =
+                admin.full_name || "Orinic Foods Admin";
+
+        }
+
+        return true;
+
+    } catch (error) {
+
+        console.error("Admin authentication failed:", error);
+
+        document.body.innerHTML =
+            "<h2>Authentication failed. Please log in again.</h2>";
+
+        return false;
 
     }
 
-
-    const {
-        data: admin,
-        error: adminError
-    } = await supabaseClient
-
-        .from("admin_users")
-
-        .select("*")
-
-        .eq("id", user.id)
-
-        .maybeSingle();
-
-
-    if (adminError || !admin) {
-
-        await supabaseClient.auth.signOut();
-
-        window.location.href =
-            "admin-login.html";
-
-        return;
-
-    }
-
-
-    document.getElementById("adminName").textContent =
-        admin.full_name || "Admin Orinic";
 }
-
 
 /* =====================================================
    NAVIGATION
@@ -205,18 +253,9 @@ function setupButtons() {
         .addEventListener("input", filterProducts);
 
 
-    document.getElementById("createReportBtn")
-        .addEventListener(
-            "click",
-            createReport
-        );
+    
 
-
-    document.getElementById("collapseBtn")
-        .addEventListener(
-            "click",
-            toggleSidebar
-        );
+    
 
 
     document.querySelectorAll(".filter")
@@ -248,112 +287,110 @@ function setupButtons() {
 
 async function logout() {
 
-    await supabaseClient.auth.signOut();
-
-    window.location.href =
-        "admin-login.html";
-}
-
-
-/* =====================================================
-   DASHBOARD
-===================================================== */
-
-async function loadDashboard() {
-
-    const {
-        data,
-        error
-    } = await supabaseClient
-        .from("orders")
-        .select("*")
-        .order("created_at", {
-            ascending: false
-        });
-
+    const { error } = await supabaseClient.auth.signOut();
 
     if (error) {
 
-        console.error(
-            "Dashboard orders:",
-            error
-        );
+        console.error("Logout error:", error);
+
+        alert("Unable to logout. Please try again.");
 
         return;
 
     }
 
+    window.location.replace("../Login.html");
+
+}
+
+
+/* =========================================
+   DASHBOARD - REAL SUPABASE DATA
+========================================= */
+
+async function loadDashboard() {
+
+    const { data, error } = await supabaseClient
+        .from("orders")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+    if (error) {
+
+        console.error("Dashboard loading error:", error);
+
+        alert("Unable to load dashboard: " + error.message);
+
+        return;
+    }
 
     orders = data || [];
 
+    // Only successful payments count as revenue
+    const paidOrders = orders.filter(order =>
+        String(order.status || "").toLowerCase() === "paid"
+    );
 
-    const today =
-        new Date().toISOString()
-            .split("T")[0];
+    const pendingOrders = orders.filter(order =>
+        String(order.status || "").toLowerCase() === "pending"
+    );
 
+    // Today's date in local browser timezone
+    const today = new Date();
 
-    const todayOrders =
-        orders.filter(order =>
-            order.created_at.startsWith(today)
-        );
+    const todayKey = [
+        today.getFullYear(),
+        String(today.getMonth() + 1).padStart(2, "0"),
+        String(today.getDate()).padStart(2, "0")
+    ].join("-");
 
+    const todayPaidOrders = paidOrders.filter(order => {
 
-    const todayRevenue =
-        todayOrders.reduce(
-            (sum, order) =>
-                sum + Number(order.total_amount || 0),
+        const date = new Date(order.created_at);
+
+        const orderDate = [
+            date.getFullYear(),
+            String(date.getMonth() + 1).padStart(2, "0"),
+            String(date.getDate()).padStart(2, "0")
+        ].join("-");
+
+        return orderDate === todayKey;
+
+    });
+
+    const todayRevenue = todayPaidOrders.reduce(
+        (sum, order) => sum + Number(order.amount || 0),
+        0
+    );
+
+    // Current month revenue
+    const currentMonth =
+        today.getFullYear() + "-" +
+        String(today.getMonth() + 1).padStart(2, "0");
+
+    const monthlyRevenue = paidOrders
+        .filter(order =>
+            String(order.created_at).slice(0, 7) === currentMonth
+        )
+        .reduce(
+            (sum, order) => sum + Number(order.amount || 0),
             0
         );
 
-
-    document.getElementById(
-        "todayRevenue"
-    ).textContent =
+    // Update dashboard cards
+    document.getElementById("todayRevenue").textContent =
         formatCurrency(todayRevenue);
 
+    document.getElementById("monthlySales").textContent =
+        formatCurrency(monthlyRevenue);
 
-    const month =
-        new Date().toISOString()
-            .slice(0, 7);
+    document.getElementById("pendingOrders").textContent =
+        pendingOrders.length;
 
-
-    const monthlyOrders =
-        orders.filter(order =>
-            order.created_at.startsWith(month)
-        );
-
-
-    const monthlySales =
-        monthlyOrders.reduce(
-            (sum, order) =>
-                sum + Number(order.total_amount || 0),
-            0
-        );
-
-
-    document.getElementById(
-        "monthlySales"
-    ).textContent =
-        formatCurrency(monthlySales);
-
-
-    const pending =
-        orders.filter(order =>
-            ["pending", "processing"]
-                .includes(
-                    String(order.order_status)
-                        .toLowerCase()
-                )
-        ).length;
-
-
-    document.getElementById(
-        "pendingOrders"
-    ).textContent = pending;
-
-
+    // Recent orders
     renderRecentOrders();
 
+    // Revenue chart
     await loadRevenueChart();
 
     await loadProductChart();
@@ -361,178 +398,168 @@ async function loadDashboard() {
 }
 
 
-/* =====================================================
+/* =========================================
    RECENT ORDERS
-===================================================== */
+========================================= */
 
 function renderRecentOrders() {
 
-    const body =
-        document.getElementById(
-            "recentOrdersBody"
-        );
+    const body = document.getElementById("recentOrdersBody");
 
+    if (!body) return;
 
     body.innerHTML = "";
 
+    orders.slice(0, 5).forEach(order => {
 
-    orders
-        .slice(0, 5)
-        .forEach(order => {
+        const row = document.createElement("tr");
 
-            const row =
-                document.createElement("tr");
+        row.innerHTML = `
 
+            <td>
+                ${escapeHTML(order.razorpay_order_id || order.id)}
+            </td>
 
-            row.innerHTML = `
+            <td>
+                ${escapeHTML(order.customer_name || "Customer")}
+            </td>
 
-                <td>
-                    ${escapeHTML(order.order_number)}
-                </td>
+            <td>
+                Order
+            </td>
 
-                <td>
-                    ${escapeHTML(order.customer_name)}
-                </td>
+            <td>
+                ${formatCurrency(order.amount)}
+            </td>
 
-                <td>
-                    Order
-                </td>
+            <td>
+                ${statusBadge(order.status)}
+            </td>
 
-                <td>
-                    ${formatCurrency(order.total_amount)}
-                </td>
+        `;
 
-                <td>
-                    ${statusBadge(order.order_status)}
-                </td>
+        body.appendChild(row);
 
-            `;
-
-
-            body.appendChild(row);
-
-        });
+    });
 
 }
 
-
-/* =====================================================
-   REVENUE CHART
-===================================================== */
+/* =========================================
+   REVENUE CHART - LAST 7 DAYS
+========================================= */
 
 async function loadRevenueChart() {
+
+    const canvas = document.getElementById("revenueChart");
+
+    if (!canvas) return;
 
     const labels = [];
     const values = [];
 
     const today = new Date();
 
-
     for (let i = 6; i >= 0; i--) {
 
         const date = new Date(today);
 
-        date.setDate(
-            today.getDate() - i
-        );
+        date.setDate(today.getDate() - i);
 
-
-        const key =
-            date.toISOString()
-                .split("T")[0];
-
+        const key = [
+            date.getFullYear(),
+            String(date.getMonth() + 1).padStart(2, "0"),
+            String(date.getDate()).padStart(2, "0")
+        ].join("-");
 
         labels.push(
-            date.toLocaleDateString(
-                "en-IN",
-                {
-                    day: "numeric",
-                    month: "short"
-                }
-            )
+            date.toLocaleDateString("en-IN", {
+                day: "numeric",
+                month: "short"
+            })
         );
 
+        const revenue = orders
+            .filter(order => {
 
-        const revenue =
-            orders
-                .filter(order =>
-                    order.created_at.startsWith(key)
-                )
-                .reduce(
-                    (sum, order) =>
-                        sum +
-                        Number(
-                            order.total_amount || 0
-                        ),
-                    0
-                );
+                if (
+                    String(order.status || "").toLowerCase() !== "paid"
+                ) {
+                    return false;
+                }
 
+                const orderDate = new Date(order.created_at);
+
+                const orderKey = [
+                    orderDate.getFullYear(),
+                    String(orderDate.getMonth() + 1).padStart(2, "0"),
+                    String(orderDate.getDate()).padStart(2, "0")
+                ].join("-");
+
+                return orderKey === key;
+
+            })
+            .reduce(
+                (sum, order) => sum + Number(order.amount || 0),
+                0
+            );
 
         values.push(revenue);
 
     }
 
-
-    const ctx =
-        document.getElementById(
-            "revenueChart"
-        );
-
-
-    if (revenueChart)
+    if (revenueChart) {
         revenueChart.destroy();
+    }
 
+    revenueChart = new Chart(canvas, {
 
-    revenueChart =
-        new Chart(ctx, {
+        type: "line",
 
-            type: "line",
+        data: {
 
-            data: {
+            labels: labels,
 
-                labels,
+            datasets: [{
 
-                datasets: [{
+                label: "Paid Revenue",
 
-                    label: "Revenue",
+                data: values,
 
-                    data: values,
+                borderWidth: 3,
 
-                    borderWidth: 2,
+                tension: 0.35,
 
-                    tension: 0.35,
+                fill: true
 
-                    fill: true
+            }]
 
-                }]
+        },
+
+        options: {
+
+            responsive: true,
+
+            maintainAspectRatio: false,
+
+            plugins: {
+
+                legend: {
+                    display: true
+                }
 
             },
 
-            options: {
+            scales: {
 
-                responsive: true,
-
-                plugins: {
-
-                    legend: {
-                        display: false
-                    }
-
-                },
-
-                scales: {
-
-                    y: {
-
-                        beginAtZero: true
-
-                    }
-
+                y: {
+                    beginAtZero: true
                 }
 
             }
 
-        });
+        }
+
+    });
 
 }
 
@@ -573,100 +600,75 @@ async function loadProducts() {
 
     renderProducts(products);
 
-    updateCustomerCount();
+    
 
 }
 
 
 function renderProducts(list) {
 
-    const body =
-        document.getElementById(
-            "productsBody"
-        );
+    const body = document.getElementById("productsBody");
 
+    if (!body) return;
 
     body.innerHTML = "";
 
+    if (!list || list.length === 0) {
+        body.innerHTML = `
+            <tr>
+                <td colspan="5">No products found.</td>
+            </tr>
+        `;
+        return;
+    }
 
     list.forEach(product => {
 
-        const row =
-            document.createElement("tr");
-
+        const row = document.createElement("tr");
 
         row.innerHTML = `
-
             <td>
-
                 <div class="product-cell">
-
                     <img
                         src="../images/${escapeHTML(product.image || "")}"
                         onerror="this.style.display='none'"
+                        alt="${escapeHTML(product.name || "Product")}"
                     >
 
                     <div>
-
-                        ${escapeHTML(product.name)}
-
-                        <small>
-                            ${escapeHTML(product.tag || "")}
-                        </small>
-
+                        ${escapeHTML(product.name || "")}
                     </div>
-
                 </div>
-
             </td>
 
+            <td>${escapeHTML(product.tag || "Uncategorized")}</td>
+
+            <td>₹${Number(product.price || 0).toFixed(2)}</td>
+
+            <td>${escapeHTML(product.description || "No description")}</td>
 
             <td>
-                ₹${Number(product.price || 0).toFixed(0)}
-            </td>
-
-
-            <td>
-                ${product.stock ?? 0}
-            </td>
-
-
-            <td>
-                ⭐ ${Number(product.rating || 0).toFixed(1)}
-            </td>
-
-
-            <td>
-
                 <div class="action-buttons">
-
                     <button
                         class="action-btn edit"
                         onclick="editProduct('${product.id}')"
-                    >
-                        ✎
-                    </button>
+                        title="Edit Product"
+                    >✎</button>
 
                     <button
                         class="action-btn delete"
                         onclick="deleteProduct('${product.id}')"
-                    >
-                        ♡
-                    </button>
-
+                        title="Delete Product"
+                    >🗑</button>
                 </div>
-
             </td>
-
         `;
-
 
         body.appendChild(row);
 
     });
 
 }
-
 
 /* =====================================================
    PRODUCT SEARCH
@@ -763,10 +765,7 @@ function openProductModal(product = null) {
         product.stock || 0;
 
 
-    document.getElementById(
-        "productRating"
-    ).value =
-        product.rating || 0;
+    
 
 
     document.getElementById(
@@ -798,105 +797,64 @@ function closeProductModal() {
 }
 
 
-/* =====================================================
-   SAVE PRODUCT
-===================================================== */
+
 
 async function saveProduct(event) {
 
     event.preventDefault();
 
-
-    const id =
-        document.getElementById(
-            "productId"
-        ).value;
-
+    const id = document.getElementById("productId").value;
 
     const product = {
-
-        name:
-            document.getElementById(
-                "productName"
-            ).value.trim(),
-
-        price:
-            Number(
-                document.getElementById(
-                    "productPrice"
-                ).value
-            ),
-
-        stock:
-            Number(
-                document.getElementById(
-                    "productStock"
-                ).value
-            ),
-
-        rating:
-            Number(
-                document.getElementById(
-                    "productRating"
-                ).value
-            ),
-
-        tag:
-            document.getElementById(
-                "productTag"
-            ).value.trim(),
-
-        description:
-            document.getElementById(
-                "productDescription"
-            ).value.trim(),
-
-        image:
-            document.getElementById(
-                "productImage"
-            ).value.trim()
-
+        name: document.getElementById("productName").value.trim(),
+        price: Number(document.getElementById("productPrice").value),
+        stock: Number(document.getElementById("productStock").value),
+        tag: document.getElementById("productTag").value.trim(),
+        description: document.getElementById("productDescription").value.trim(),
+        image: document.getElementById("productImage").value.trim()
     };
 
+    if (
+        !product.name ||
+        !Number.isFinite(product.price) ||
+        product.price <= 0 ||
+        !Number.isInteger(product.stock) ||
+        product.stock < 0
+    ) {
+        alert("Please enter a valid product name, price and stock quantity.");
+        return;
+    }
 
     let result;
 
 
     if (id) {
-
-        result =
-            await supabaseClient
-                .from("products")
-                .update(product)
-                .eq("id", id);
-
+        result = await supabaseClient
+            .from("products")
+            .update(product)
+            .eq("id", id);
     } else {
-
-        result =
-            await supabaseClient
-                .from("products")
-                .insert(product);
-
+        result = await supabaseClient
+            .from("products")
+            .insert(product);
     }
 
 
     if (result.error) {
-
-        alert(
-            "Unable to save product: " +
-            result.error.message
-        );
-
+        console.error("Product save error:", result.error);
+        alert("Unable to save product: " + result.error.message);
         return;
 
     }
 
+    alert(id ? "Product updated successfully!" : "Product added successfully!");
 
     closeProductModal();
 
     await loadProducts();
 
 }
+
 
 
 /* =====================================================
@@ -963,136 +921,107 @@ window.deleteProduct = async function(id) {
 
 async function loadOrders() {
 
-    const {
-        data,
-        error
-    } = await supabaseClient
-
+    const { data, error } = await supabaseClient
         .from("orders")
-
         .select("*")
-
-        .order("created_at", {
-            ascending: false
-        });
-
+        .order("created_at", { ascending: false });
 
     if (error) {
-
-        console.error(
-            "Orders:",
-            error
-        );
-
+        console.error("Orders Error:", error);
+        alert("Unable to load orders: " + error.message);
         return;
-
     }
 
-
     orders = data || [];
+
+    // Fetch purchased product names
+    const { data: items, error: itemsError } = await supabaseClient
+        .from("order_items")
+        .select("order_id, product_name, quantity");
+
+    if (itemsError) {
+        console.error("Order Items Error:", itemsError);
+        alert("Unable to load purchased products: " + itemsError.message);
+        return;
+    }
+
+    // Attach product details to their respective orders
+    orders.forEach(order => {
+        order.products = (items || []).filter(
+            item => String(item.order_id) === String(order.id)
+        );
+    });
 
     renderOrders("all");
 
 }
 
+/* =====================================================
+   RENDER ORDERS
+===================================================== */
 
-function renderOrders(status) {
+function renderOrders(status = "all") {
 
-    const body =
-        document.getElementById(
-            "ordersBody"
-        );
+    const body = document.getElementById("ordersBody");
 
+    if (!body) return;
 
     body.innerHTML = "";
 
-
     let list = orders;
 
-
     if (status !== "all") {
-
-        list =
-            orders.filter(order =>
-                String(order.order_status)
-                    .toLowerCase() === status
-            );
-
+        list = orders.filter(order =>
+            String(order.status || "").toLowerCase() === status.toLowerCase()
+        );
     }
 
+    if (list.length === 0) {
+        body.innerHTML = `
+            <tr>
+                <td colspan="7">No orders found.</td>
+            </tr>
+        `;
+        return;
+    }
 
     list.forEach(order => {
 
-        const row =
-            document.createElement("tr");
+        const row = document.createElement("tr");
 
+        const orderNumber = order.razorpay_order_id || order.id;
+
+        const productNames = order.products && order.products.length
+            ? order.products.map(item =>
+                `${item.product_name} × ${item.quantity}`
+              ).join(", ")
+            : "No products found";
 
         row.innerHTML = `
+            <td>${escapeHTML(String(orderNumber))}</td>
+
+            <td>${escapeHTML(order.customer_name || "Customer")}</td>
+
+            <td>${escapeHTML(productNames)}</td>
+
+            <td>${formatDate(order.created_at)}</td>
 
             <td>
-                ${escapeHTML(order.order_number)}
+                <strong>${formatCurrency(order.amount)}</strong>
             </td>
 
             <td>
-                ${escapeHTML(order.customer_name)}
-            </td>
-
-            <td>
-                —
-            </td>
-
-            <td>
-                ${formatDate(order.created_at)}
-            </td>
-
-            <td>
-                <strong>
-                    ${formatCurrency(order.total_amount)}
-                </strong>
-            </td>
-
-            <td>
-
-                <select
-                    onchange="updateOrderStatus('${order.id}', this.value)"
-                >
-
-                    <option
-                        value="processing"
-                        ${order.order_status === "processing" ? "selected" : ""}
-                    >
-                        Processing
-                    </option>
-
-                    <option
-                        value="shipped"
-                        ${order.order_status === "shipped" ? "selected" : ""}
-                    >
-                        Shipped
-                    </option>
-
-                    <option
-                        value="delivered"
-                        ${order.order_status === "delivered" ? "selected" : ""}
-                    >
-                        Delivered
-                    </option>
-
-                </select>
-
+                ${statusBadge(order.status)}
             </td>
 
             <td>
                 <button
                     class="action-btn view"
-                    onclick="viewOrder('${order.id}')"
-                >
+                    onclick="viewOrder('${order.id}')">
                     View →
                 </button>
             </td>
-
         `;
-
 
         body.appendChild(row);
 
@@ -1100,70 +1029,50 @@ function renderOrders(status) {
 
 }
 
-
-/* =====================================================
-   UPDATE ORDER
-===================================================== */
-
-window.updateOrderStatus =
-async function(id, status) {
-
-    const {
-        error
-    } = await supabaseClient
-
-        .from("orders")
-
-        .update({
-            order_status: status
-        })
-
-        .eq("id", id);
-
-
-    if (error) {
-
-        alert(error.message);
-
-        return;
-
-    }
-
-
-    await loadOrders();
-
-    await loadDashboard();
-
-};
-
-
 /* =====================================================
    VIEW ORDER
 ===================================================== */
 
-window.viewOrder = function(id) {
+window.viewOrder = async function(id) {
 
-    const order =
-        orders.find(
-            item =>
-                String(item.id) === String(id)
-        );
-
-
-    if (!order)
-        return;
-
-
-    alert(
-        `Order: ${order.order_number}\n` +
-        `Customer: ${order.customer_name}\n` +
-        `Phone: ${order.customer_phone || "N/A"}\n` +
-        `Amount: ₹${order.total_amount}\n` +
-        `Status: ${order.order_status}`
+    const order = orders.find(
+        item => String(item.id) === String(id)
     );
 
-};
+    if (!order) {
+        alert("Order not found!");
+        return;
+    }
 
+    const { data: items, error } = await supabaseClient
+        .from("order_items")
+        .select("product_name, quantity, price")
+        .eq("order_id", order.id);
+
+    if (error) {
+        console.error("Order items error:", error);
+    }
+
+    let itemDetails = "No product details available.";
+
+    if (items && items.length > 0) {
+        itemDetails = items.map(item =>
+            `${item.product_name} x ${item.quantity} - ₹${item.price}`
+        ).join("\n");
+    }
+
+    alert(
+        `Order ID: ${order.razorpay_order_id || order.id}\n` +
+        `Customer: ${order.customer_name || "N/A"}\n` +
+        `Phone: ${order.phone || "N/A"}\n` +
+        `Amount: ₹${order.amount ?? "N/A"}\n` +
+        `Payment Status: ${order.status || "N/A"}\n` +
+        `Date: ${order.created_at || "N/A"}\n` +
+        `Address: ${order.address || "N/A"}\n\n` +
+        `PRODUCTS:\n${itemDetails}`
+    );
+}
+;
 
 /* =====================================================
    CUSTOMERS
@@ -1171,82 +1080,74 @@ window.viewOrder = function(id) {
 
 async function loadCustomers() {
 
-    const {
-        data,
-        error
-    } = await supabaseClient
+    const body = document.getElementById("customersBody");
+    const totalCustomers = document.getElementById("totalCustomers");
 
-        .from("profiles")
-
-        .select("*")
-
-        .order("created_at", {
-            ascending: false
-        });
-
-
-    if (error) {
-
-        console.error(
-            "Customers:",
-            error
-        );
-
+    if (!body) {
+        console.error("Customers table body not found!");
         return;
-
     }
 
+    body.innerHTML = `
+        <tr>
+            <td colspan="5">Loading customers...</td>
+        </tr>
+    `;
 
-    const body =
-        document.getElementById(
-            "customersBody"
-        );
+    const { data, error } = await supabaseClient
+        .from("profiles")
+        .select("id, full_name, email, phone, city, created_at")
+        .order("created_at", { ascending: false });
 
+    if (error) {
+        console.error("Customers loading error:", error);
+
+        body.innerHTML = `
+            <tr>
+                <td colspan="5">Unable to load customers.</td>
+            </tr>
+        `;
+
+        return;
+    }
 
     body.innerHTML = "";
 
-
-    (data || []).forEach(customer => {
-
-        const row =
-            document.createElement("tr");
-
-
-        row.innerHTML = `
-
-            <td>
-                ${escapeHTML(customer.full_name || "Customer")}
-            </td>
-
-            <td>
-                ${escapeHTML(customer.email || "")}
-            </td>
-
-            <td>
-                ${escapeHTML(customer.phone || "")}
-            </td>
-
-            <td>
-                ${escapeHTML(customer.city || "")}
-            </td>
-
-            <td>
-                ${formatDate(customer.created_at)}
-            </td>
-
+    if (!data || data.length === 0) {
+        body.innerHTML = `
+            <tr>
+                <td colspan="5">No customers registered yet.</td>
+            </tr>
         `;
 
+        if (totalCustomers) {
+            totalCustomers.textContent = "0";
+        }
+
+        return;
+    }
+
+    data.forEach(customer => {
+
+        const row = document.createElement("tr");
+
+        row.innerHTML = `
+            <td>${escapeHTML(customer.full_name || "Customer")}</td>
+            <td>${escapeHTML(customer.email || "—")}</td>
+            <td>${escapeHTML(customer.phone || "—")}</td>
+            <td>${escapeHTML(customer.city || "—")}</td>
+            <td>${formatDate(customer.created_at)}</td>
+        `;
 
         body.appendChild(row);
 
     });
 
+    if (totalCustomers) {
+        totalCustomers.textContent = data.length;
+    }
 
-    document.getElementById(
-        "totalCustomers"
-    ).textContent =
-        data?.length || 0;
-
+    console.log("Customers loaded:", data.length);
 }
 
 
@@ -1256,66 +1157,74 @@ async function loadCustomers() {
 
 async function loadPayments() {
 
-    const {
-        data,
-        error
-    } = await supabaseClient
+    const body = document.getElementById("paymentsBody");
 
-        .from("payments")
-
-        .select("*")
-
-        .order("created_at", {
-            ascending: false
-        });
-
-
-    if (error) {
-
-        console.error(
-            "Payments:",
-            error
-        );
-
+    if (!body) {
+        console.error("Payments table body not found!");
         return;
-
     }
 
+    body.innerHTML = `
+        <tr>
+            <td colspan="6">Loading payments...</td>
+        </tr>
+    `;
 
-    const body =
-        document.getElementById(
-            "paymentsBody"
-        );
+    const { data, error } = await supabaseClient
+        .from("orders")
+        .select(`
+            id,
+            razorpay_order_id,
+            razorpay_payment_id,
+            amount,
+            status,
+            created_at
+        `)
+        .order("created_at", { ascending: false });
 
+    if (error) {
+        console.error("Payments loading error:", error);
+
+        body.innerHTML = `
+            <tr>
+                <td colspan="6">Unable to load payments.</td>
+            </tr>
+        `;
+
+        return;
+    }
 
     body.innerHTML = "";
 
+    if (!data || data.length === 0) {
+        body.innerHTML = `
+            <tr>
+                <td colspan="6">No payment records found.</td>
+            </tr>
+        `;
+        return;
+    }
 
-    (data || []).forEach(payment => {
+    data.forEach(payment => {
 
-        const row =
-            document.createElement("tr");
-
+        const row = document.createElement("tr");
 
         row.innerHTML = `
-
             <td>
-                ${escapeHTML(payment.payment_id || "—")}
+                ${escapeHTML(payment.razorpay_payment_id || "—")}
             </td>
 
             <td>
-                ${payment.order_id || "—"}
+                ${escapeHTML(
+                    payment.razorpay_order_id || String(payment.id)
+                )}
             </td>
 
             <td>
-                <strong>
-                    ${formatCurrency(payment.amount)}
-                </strong>
+                <strong>${formatCurrency(payment.amount)}</strong>
             </td>
 
-            <td>
-                ${escapeHTML(payment.method || "COD")}
-            </td>
+            <td>Razorpay</td>
 
             <td>
                 ${statusBadge(payment.status)}
@@ -1324,16 +1233,14 @@ async function loadPayments() {
             <td>
                 ${formatDate(payment.created_at)}
             </td>
-
         `;
-
 
         body.appendChild(row);
 
     });
 
+    console.log("Payments loaded:", data.length);
 }
-
 
 /* =====================================================
    REVIEWS
@@ -1341,97 +1248,136 @@ async function loadPayments() {
 
 async function loadReviews() {
 
-    const {
-        data,
-        error
-    } = await supabaseClient
+    const body = document.getElementById("reviewsBody");
 
-        .from("reviews")
-
-        .select("*")
-
-        .order("created_at", {
-            ascending: false
-        });
-
-
-    if (error) {
-
-        console.error(
-            "Reviews:",
-            error
-        );
-
+    if (!body) {
+        console.error("Reviews table body not found!");
         return;
-
     }
 
+    body.innerHTML = `
+        <tr>
+            <td colspan="6">Loading reviews...</td>
+        </tr>
+    `;
 
-    const body =
-        document.getElementById(
-            "reviewsBody"
-        );
+    // Fetch reviews
+    const { data: reviews, error } = await supabaseClient
+        .from("reviews")
+        .select("id, created_at, product_id, user_id, rating, review")
+        .order("created_at", { ascending: false });
 
+    if (error) {
+        console.error("Reviews loading error:", error);
+
+        body.innerHTML = `
+            <tr>
+                <td colspan="6">Unable to load reviews.</td>
+            </tr>
+        `;
+        return;
+    }
 
     body.innerHTML = "";
 
+    if (!reviews || reviews.length === 0) {
+        body.innerHTML = `
+            <tr>
+                <td colspan="6">No reviews found.</td>
+            </tr>
+        `;
+        console.log("No reviews available.");
+        return;
+    }
 
-    (data || []).forEach(review => {
+    // Collect product and customer IDs
+    const productIds = [...new Set(
+        reviews.map(r => r.product_id).filter(Boolean)
+    )];
 
-        const row =
-            document.createElement("tr");
+    const userIds = [...new Set(
+        reviews.map(r => r.user_id).filter(Boolean)
+    )];
 
+    // Fetch product names
+    let productMap = {};
+
+    if (productIds.length > 0) {
+
+        const { data: productsData, error: productsError } =
+            await supabaseClient
+                .from("products")
+                .select("id, name")
+                .in("id", productIds);
+
+        if (productsError) {
+            console.error("Review products error:", productsError);
+        } else {
+            (productsData || []).forEach(product => {
+                productMap[product.id] = product.name;
+            });
+        }
+    }
+
+    // Fetch customer names
+    let customerMap = {};
+
+    if (userIds.length > 0) {
+
+        const { data: customersData, error: customersError } =
+            await supabaseClient
+                .from("profiles")
+                .select("id, full_name")
+                .in("id", userIds);
+
+        if (customersError) {
+            console.error("Review customers error:", customersError);
+        } else {
+            (customersData || []).forEach(customer => {
+                customerMap[customer.id] = customer.full_name;
+            });
+        }
+    }
+
+    // Display reviews
+    reviews.forEach(review => {
+
+        const row = document.createElement("tr");
+
+        const productName =
+            productMap[review.product_id] || "Product unavailable";
+
+        const customerName =
+            customerMap[review.user_id] || "Customer";
 
         row.innerHTML = `
+            <td>${escapeHTML(productName)}</td>
+
+            <td>${escapeHTML(customerName)}</td>
+
+            <td>⭐ ${Number(review.rating || 0)}/5</td>
+
+            <td>${escapeHTML(review.review || "No comment")}</td>
+
+            <td>${formatDate(review.created_at)}</td>
 
             <td>
-                ${review.product_id || "—"}
-            </td>
-
-            <td>
-                ${escapeHTML(
-                    review.user_name ||
-                    review.customer_name ||
-                    "Customer"
-                )}
-            </td>
-
-            <td>
-                ⭐ ${review.rating || 0}
-            </td>
-
-            <td>
-                ${escapeHTML(
-                    review.comment ||
-                    review.review ||
-                    ""
-                )}
-            </td>
-
-            <td>
-                ${formatDate(review.created_at)}
-            </td>
-
-            <td>
-
                 <button
                     class="action-btn delete"
                     onclick="deleteReview('${review.id}')"
+                    title="Delete Review"
                 >
                     🗑
                 </button>
-
             </td>
-
         `;
-
 
         body.appendChild(row);
 
     });
 
+    console.log("Reviews loaded:", reviews.length);
 }
-
 
 /* =====================================================
    DELETE REVIEW
@@ -1785,50 +1731,101 @@ async function loadForecastChart() {
 
 
 /* =====================================================
-   PRODUCT CHART
+   PRODUCT CHART - PAID PRODUCT REVENUE
 ===================================================== */
 
 async function loadProductChart() {
 
-    const ctx =
-        document.getElementById(
-            "productChart"
-        );
+    const ctx = document.getElementById("productChart");
 
+    if (!ctx) return;
 
-    if (!ctx)
-        return;
+    try {
 
+        // Get successfully paid orders
+        const { data: paidOrders, error: ordersError } =
+            await supabaseClient
+                .from("orders")
+                .select("id")
+                .eq("status", "paid");
 
-    const labels =
-        products.map(
-            product => product.name
-        );
+        if (ordersError) throw ordersError;
 
+        // Destroy previous chart
+        if (productChart) {
+            productChart.destroy();
+            productChart = null;
+        }
 
-    const values =
-        products.map(
-            product =>
-                Number(product.stock || 0)
-        );
+        const orderIds = (paidOrders || []).map(order => order.id);
 
+        // No paid orders available
+        if (orderIds.length === 0) {
 
-    if (productChart)
-        productChart.destroy();
+            productChart = new Chart(ctx, {
+                type: "doughnut",
+                data: {
+                    labels: ["No paid sales yet"],
+                    datasets: [{
+                        data: [1]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: "bottom"
+                        }
+                    }
+                }
+            });
 
+            return;
+        }
 
-    productChart =
-        new Chart(ctx, {
+        // Get items belonging to paid orders
+        const { data: items, error: itemsError } =
+            await supabaseClient
+                .from("order_items")
+                .select("product_name, price, quantity")
+                .in("order_id", orderIds);
+
+        if (itemsError) throw itemsError;
+
+        // Calculate revenue product-wise
+        const revenueByProduct = {};
+
+        (items || []).forEach(item => {
+
+            const name = item.product_name || "Unknown Product";
+
+            const revenue =
+                Number(item.price || 0) *
+                Number(item.quantity || 0);
+
+            revenueByProduct[name] =
+                (revenueByProduct[name] || 0) + revenue;
+
+        });
+
+        const labels = Object.keys(revenueByProduct);
+
+        const values = Object.values(revenueByProduct);
+
+        // Display chart
+        productChart = new Chart(ctx, {
 
             type: "doughnut",
 
             data: {
 
-                labels,
+                labels: labels.length ? labels : ["No product sales"],
 
                 datasets: [{
 
-                    data: values,
+                    label: "Paid Revenue",
+
+                    data: labels.length ? values : [1],
 
                     borderWidth: 2
 
@@ -1840,10 +1837,33 @@ async function loadProductChart() {
 
                 responsive: true,
 
+                maintainAspectRatio: false,
+
                 plugins: {
 
                     legend: {
                         position: "bottom"
+                    },
+
+                    tooltip: {
+
+                        callbacks: {
+
+                            label: function(context) {
+
+                                const amount = Number(context.raw || 0);
+
+                                return context.label + ": " +
+                                    new Intl.NumberFormat("en-IN", {
+                                        style: "currency",
+                                        currency: "INR",
+                                        maximumFractionDigits: 2
+                                    }).format(amount);
+
+                            }
+
+                        }
+
                     }
 
                 }
@@ -1852,44 +1872,16 @@ async function loadProductChart() {
 
         });
 
-}
+    } catch (error) {
 
-
-/* =====================================================
-   SIDEBAR COLLAPSE
-===================================================== */
-
-function toggleSidebar() {
-
-    const sidebar =
-        document.querySelector(
-            ".sidebar"
-        );
-
-
-    const main =
-        document.querySelector(
-            ".main-content"
-        );
-
-
-    if (
-        sidebar.style.width === "70px"
-    ) {
-
-        sidebar.style.width = "210px";
-
-        main.style.marginLeft = "210px";
-
-    } else {
-
-        sidebar.style.width = "70px";
-
-        main.style.marginLeft = "70px";
+        console.error("Product Chart Error:", error);
 
     }
 
 }
+
+
+
 
 
 /* =====================================================

@@ -1,105 +1,133 @@
-// =========================================
-// PASSWORD SHOW / HIDE
-// =========================================
+// =============================================
+// ORINIC FOODS - SHARED LOGIN SYSTEM
+// ADMIN + CUSTOMER
+// =============================================
 
-const passwordInput = document.getElementById("password");
-const togglePassword = document.getElementById("togglePassword");
+document.addEventListener("DOMContentLoaded", () => {
 
-togglePassword.addEventListener("click", function () {
+    const loginForm = document.getElementById("loginForm");
+    const passwordInput = document.getElementById("password");
+    const togglePassword = document.getElementById("togglePassword");
+    const loginButton = document.querySelector(".login-btn");
 
-    if (passwordInput.type === "password") {
-
-        passwordInput.type = "text";
-        togglePassword.textContent = "🙈";
-
-    } else {
-
-        passwordInput.type = "password";
-        togglePassword.textContent = "👁";
-
-    }
-
-});
-
-
-// =========================================
-// LOGIN FORM
-// =========================================
-
-const loginForm = document.getElementById("loginForm");
-
-loginForm.addEventListener("submit", async function (event) {
-
-    event.preventDefault();
-
-    const email =
-        document.getElementById("email").value.trim();
-
-    const password =
-        document.getElementById("password").value;
-
-
-    // Check empty fields
-
-    if (!email || !password) {
-
-        alert("Please enter your email and password.");
-
+    // Check required HTML elements
+    if (!loginForm || !passwordInput || !loginButton) {
+        console.error("Login page elements are missing.");
         return;
-
     }
 
-
-    // Disable button while logging in
-
-    const loginButton =
-        document.querySelector(".login-btn");
-
-    loginButton.disabled = true;
-
-    loginButton.querySelector("span:first-child").textContent =
-        "Signing in...";
-
-
     // =========================================
-    // SUPABASE LOGIN
+    // SHOW / HIDE PASSWORD
     // =========================================
 
-    const { data, error } =
-        await supabaseClient.auth.signInWithPassword({
+    if (togglePassword) {
 
-            email: email,
-            password: password
+        togglePassword.addEventListener("click", () => {
+
+            const isPassword = passwordInput.type === "password";
+
+            passwordInput.type = isPassword ? "text" : "password";
+
+            togglePassword.textContent = isPassword ? "🙈" : "👁";
+
+            togglePassword.setAttribute(
+                "aria-label",
+                isPassword ? "Hide password" : "Show password"
+            );
 
         });
 
-
-    // =========================================
-    // LOGIN ERROR
-    // =========================================
-
-    if (error) {
-
-        console.error("Login error:", error);
-
-        alert(error.message);
-
-        loginButton.disabled = false;
-
-        loginButton.querySelector("span:first-child").textContent =
-            "Log In";
-
-        return;
-
     }
 
-
     // =========================================
-    // LOGIN SUCCESS
+    // LOGIN
     // =========================================
 
-    console.log("Login successful:", data.user);
+    loginForm.addEventListener("submit", async (event) => {
 
-    window.location.href = "profile.html";
+        event.preventDefault();
+
+        const email = document.getElementById("email").value.trim();
+        const password = passwordInput.value;
+
+        if (!email || !password) {
+            alert("Please enter your email and password.");
+            return;
+        }
+
+        const buttonText = loginButton.querySelector("span:first-child");
+
+        loginButton.disabled = true;
+
+        if (buttonText) {
+            buttonText.textContent = "Signing in...";
+        }
+
+        try {
+
+            // STEP 1: SUPABASE AUTHENTICATION
+
+            const { data, error } =
+                await supabaseClient.auth.signInWithPassword({
+                    email,
+                    password
+                });
+
+            if (error) {
+                throw error;
+            }
+
+            const user = data.user;
+
+            if (!user) {
+                throw new Error("Unable to verify your account.");
+            }
+
+            // STEP 2: CHECK ADMIN PERMISSION
+
+            const { data: admin, error: adminError } =
+                await supabaseClient
+                    .from("admin_users")
+                    .select("id, full_name")
+                    .eq("id", user.id)
+                    .maybeSingle();
+
+            if (adminError) {
+
+                console.error("Admin verification failed:", adminError);
+
+                throw new Error(
+                    "Unable to verify account permissions. Please try again."
+                );
+
+            }
+
+            // STEP 3: REDIRECT BASED ON ROLE
+
+            if (admin) {
+
+                window.location.replace("admin/admin.html");
+
+            } else {
+
+                window.location.replace("Profile.html");
+
+            }
+
+        } catch (error) {
+
+            console.error("Login error:", error);
+
+            alert(error.message || "Login failed. Please try again.");
+
+            loginButton.disabled = false;
+
+            if (buttonText) {
+                buttonText.textContent = "Log In";
+            }
+
+        }
+
+    });
 
 });

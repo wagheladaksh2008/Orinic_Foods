@@ -182,46 +182,7 @@ body {
     gap: 10px;
 }
 
-.notification {
-    width: 38px;
-    height: 38px;
 
-    border: 1px solid var(--border);
-
-    border-radius: 12px;
-
-    display: flex;
-
-    align-items: center;
-
-    justify-content: center;
-
-    position: relative;
-}
-
-.notification span {
-    position: absolute;
-
-    right: -4px;
-    top: -5px;
-
-    width: 17px;
-    height: 17px;
-
-    border-radius: 50%;
-
-    background: #f33;
-
-    color: white;
-
-    font-size: 10px;
-
-    display: flex;
-
-    align-items: center;
-
-    justify-content: center;
-}
 
 .user-pill {
     display: flex;
@@ -715,128 +676,6 @@ tbody tr:last-child td {
 
 
 /* =====================================================
-   AI ANALYTICS
-===================================================== */
-
-.ai-stats {
-    display: grid;
-
-    grid-template-columns:
-        repeat(3, 1fr);
-
-    gap: 15px;
-
-    margin-bottom: 22px;
-}
-
-.ai-card {
-    min-height: 165px;
-
-    border-radius: 16px;
-
-    padding: 24px;
-
-    color: white;
-}
-
-.ai-card span {
-    display: block;
-
-    font-size: 25px;
-
-    margin-bottom: 15px;
-}
-
-.ai-card strong {
-    display: block;
-
-    font-family: "DM Serif Display", serif;
-
-    font-size: 28px;
-}
-
-.ai-card p {
-    margin-top: 3px;
-
-    font-size: 13px;
-}
-
-.ai-card small {
-    opacity: 0.75;
-
-    font-size: 11px;
-}
-
-.green-card {
-    background: #153e30;
-}
-
-.purple-card {
-    background: #7950a8;
-}
-
-.orange-card {
-    background: #cb8911;
-}
-
-.two-panel-grid {
-    display: grid;
-
-    grid-template-columns: 1fr 1fr;
-
-    gap: 22px;
-}
-
-.progress-row {
-    margin-top: 20px;
-}
-
-.progress-row > div:first-child {
-    display: flex;
-
-    justify-content: space-between;
-
-    font-size: 13px;
-
-    margin-bottom: 7px;
-}
-
-.progress {
-    height: 9px;
-
-    background: #dfd4bd;
-
-    border-radius: 20px;
-
-    overflow: hidden;
-}
-
-.progress span {
-    display: block;
-
-    height: 100%;
-
-    background: #56a57c;
-
-    border-radius: inherit;
-}
-
-.behaviour-list {
-    margin-top: 15px;
-}
-
-.behaviour-list div {
-    display: flex;
-
-    justify-content: space-between;
-
-    padding: 10px 0;
-
-    font-size: 13px;
-}
-
-
-/* =====================================================
    MODAL
 ===================================================== */
 
@@ -991,15 +830,9 @@ tbody tr:last-child td {
         margin-left: 70px;
     }
 
-    .two-panel-grid {
-        grid-template-columns: 1fr;
-    }
+    
 
-    .ai-stats {
-        grid-template-columns: 1fr;
-    }
-
-}
+}   
 
 @media(max-width:600px) {
 
