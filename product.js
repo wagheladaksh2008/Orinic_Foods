@@ -279,10 +279,32 @@ if (cartBtn) {
 if (buyBtn) {
     buyBtn.addEventListener("click", () => {
 
-        alert(
-            `Buying ${quantity} × ${currentProduct.name}`
+        if (!currentProduct) {
+            alert("Product is still loading. Please try again.");
+            return;
+        }
+
+        let cart = JSON.parse(localStorage.getItem("orinicCart")) || [];
+
+        const existing = cart.find(
+            item => String(item.id) === String(currentProduct.id)
         );
 
+        if (existing) {
+            existing.quantity += quantity;
+        } else {
+            cart.push({
+                id: currentProduct.id,
+                name: currentProduct.name,
+                price: Number(currentProduct.price),
+                image: currentProduct.image,
+                quantity: quantity
+            });
+        }
+
+        localStorage.setItem("orinicCart", JSON.stringify(cart));
+
+        window.location.href = "Cart.html";
     });
 }
 
