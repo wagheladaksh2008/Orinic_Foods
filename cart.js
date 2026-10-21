@@ -110,7 +110,7 @@ function removeItem(index) {
 }
 
 // Create and display delivery form
-function showDeliveryForm() {
+async function showDeliveryForm() {
     if (!cart.length) {
         alert("Your cart is empty.");
         return;
@@ -179,6 +179,57 @@ function showDeliveryForm() {
 
     document.body.appendChild(modal);
 
+    // ======================================
+// AUTO-FILL CUSTOMER DETAILS FROM SUPABASE
+// ======================================
+
+try {
+
+    const {
+        data: { user },
+        error
+    } = await supabaseClient.auth.getUser();
+
+    if (error) {
+        throw error;
+    }
+
+    if (!user) {
+
+        alert("Please log in before checkout.");
+
+        window.location.href =
+            "Login.html?redirect=" +
+            encodeURIComponent("Cart.html?checkout=1");
+
+        modal.remove();
+        return;
+    }
+
+    // Get details saved during signup
+    const customerDetails = user.user_metadata || {};
+
+    // Automatically fill customer name
+    document.getElementById("customerName").value =
+        customerDetails.full_name || "";
+
+    // Automatically fill mobile number
+    document.getElementById("customerPhone").value =
+        customerDetails.phone || "";
+
+    // Keep delivery address empty
+    document.getElementById("customerAddress").value = "";
+
+} catch (error) {
+
+    console.error("Customer details loading error:", error);
+
+    alert("Unable to load your account details. Please try again.");
+
+    modal.remove();
+    return;
+}
+
     modal.querySelector("#cancelDelivery").addEventListener("click", () => {
         modal.remove();
     });
@@ -205,15 +256,19 @@ function showDeliveryForm() {
                 error: authError
             } = await supabaseClient.auth.getUser();
 
-            if (authError) throw authError;
+            if (authError && authError.name !== "AuthSessionMissingError") {
+    throw authError;
+}
 
-            if (!user) {
-                modal.remove();
-                alert("Please log in before checkout.");
-                window.location.href = "Login.html";
-                return;
-            }
+if (!user) {
+    alert("Please log in before proceeding to checkout.");
 
+    window.location.href =
+        "Login.html?redirect=" +
+        encodeURIComponent("Cart.html?checkout=1");
+
+    return;
+}
             if (!window.Razorpay) {
                 throw new Error(
                     "Razorpay Checkout did not load. Refresh the page and try again."
@@ -424,13 +479,19 @@ document.addEventListener("click", async event => {
             error
         } = await supabaseClient.auth.getUser();
 
-        if (error) throw error;
+       if (error && error.name !== "AuthSessionMissingError") {
+    throw error;
+}
 
-        if (!user) {
-            alert("Please log in before proceeding to checkout.");
-            window.location.href = "Login.html";
-            return;
-        }
+if (!user) {
+    alert("Please log in before proceeding to checkout.");
+
+    window.location.href =
+        "Login.html?redirect=" +
+        encodeURIComponent("Cart.html?checkout=1");
+
+    return;
+}
 
         showDeliveryForm();
 
@@ -452,3 +513,45 @@ document.addEventListener("click", async event => {
 
 // Initial cart display
 displayCart();
+
+// Resume checkout after successful login
+document.addEventListener("DOMContentLoaded", async () => {
+
+    const params = new URLSearchParams(window.location.search);
+
+    if (params.get("checkout") !== "1") {
+        return;
+    }
+
+    if (!cart.length) {
+        alert("Your cart is empty.");
+        return;
+    }
+
+    try {
+        const {
+            data: { user },
+            error
+        } = await supabaseClient.auth.getUser();
+
+        if (error && error.name !== "AuthSessionMissingError") {
+    throw error;
+}
+
+if (!user) {
+    window.location.href =
+        "Login.html?redirect=" +
+        encodeURIComponent("Cart.html?checkout=1");
+
+    return;
+}
+
+        // Open delivery form automatically
+        showDeliveryForm();
+
+    } catch (error) {
+        console.error("Checkout authentication error:", error);
+        alert("Unable to verify your login. Please try again.");
+    }
+
+});

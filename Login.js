@@ -104,15 +104,35 @@ document.addEventListener("DOMContentLoaded", () => {
 
             // STEP 3: REDIRECT BASED ON ROLE
 
-            if (admin) {
+if (admin) {
 
-                window.location.replace("admin/admin.html");
+    // Admin always goes to admin panel
+    window.location.replace("admin/admin.html");
 
-            } else {
+} else {
 
-                window.location.replace("Profile.html");
+    // Customer returns to the page they originally requested
+    const params = new URLSearchParams(window.location.search);
 
-            }
+    const requestedPage = params.get("redirect");
+
+    // Allow only our intended internal checkout destination
+    const allowedRedirects = [
+        "Cart.html?checkout=1"
+    ];
+
+    if (allowedRedirects.includes(requestedPage)) {
+
+        window.location.replace(requestedPage);
+
+    } else {
+
+        // Normal login
+        window.location.replace("Profile.html");
+
+    }
+
+}
 
         } catch (error) {
 

@@ -111,9 +111,7 @@
 
         <span>New to Orinic?</span>
 
-        <a href="Signup.html">
-          Create account
-        </a>
+        <a id="signupLink" href="Signup.html">Create Account</a>
 
       </div>
 
@@ -124,7 +122,18 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase.js"></script>
   <script src="Login.js"></script>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const redirect = params.get("redirect");
 
+    const signupLink = document.getElementById("signupLink");
+
+    if (signupLink && redirect === "Cart.html?checkout=1") {
+        signupLink.href =
+            "Signup.html?redirect=" +
+            encodeURIComponent(redirect);
+    }
+</script>
 </body>
 
 </html>

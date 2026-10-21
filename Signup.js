@@ -184,6 +184,24 @@ signupForm.addEventListener("submit", async function (event) {
 
     alert("Account created successfully! 🎉");
 
+// Preserve the checkout destination
+const params = new URLSearchParams(window.location.search);
+const requestedPage = params.get("redirect");
+
+const allowedRedirects = [
+    "Cart.html?checkout=1"
+];
+
+if (allowedRedirects.includes(requestedPage)) {
+
+    window.location.href =
+        "Login.html?redirect=" +
+        encodeURIComponent(requestedPage);
+
+} else {
+
     window.location.href = "Login.html";
+
+}
 
 });

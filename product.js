@@ -277,7 +277,7 @@ if (cartBtn) {
 }
 
 if (buyBtn) {
-    buyBtn.addEventListener("click", () => {
+    buyBtn.addEventListener("click", async () => {
 
         if (!currentProduct) {
             alert("Product is still loading. Please try again.");
@@ -302,9 +302,30 @@ if (buyBtn) {
             });
         }
 
-        localStorage.setItem("orinicCart", JSON.stringify(cart));
+        // Save cart before redirecting
+localStorage.setItem("orinicCart", JSON.stringify(cart));
 
-        window.location.href = "Cart.html";
+// Check Supabase login
+const {
+    data: { user },
+    error
+} = await supabaseClient.auth.getUser();
+
+if (error) {
+    console.error("Authentication error:", error);
+    alert("Unable to verify your login. Please try again.");
+    return;
+}
+
+// Continue directly to checkout if logged in
+if (user) {
+    window.location.href = "Cart.html?checkout=1";
+} else {
+    // Remember checkout destination
+    window.location.href =
+        "Login.html?redirect=" +
+        encodeURIComponent("Cart.html?checkout=1");
+}
     });
 }
 
