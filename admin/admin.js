@@ -1,1951 +1,478 @@
-/* =====================================================
-   ORINIC FOODS ADMIN PANEL
-===================================================== */
+/* Orinic Foods admin panel — reads the existing Supabase tables. */
+const $ = (id) => document.getElementById(id);
+let products = [], orders = [], customers = [], reviews = [], orderItems = [], payments = [];
+const money = (value) => new Intl.NumberFormat("en-IN", {style:"currency",currency:"INR",maximumFractionDigits:2}).format(Number(value || 0));
+const safe = (value) => String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const date = (value) => value ? new Date(value).toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric"}) : "—";
+const norm = (v) => String(v ?? "").trim().toLowerCase();
+function getProductImageUrl(image) {
+    if (!image) return "";
 
-
-let products = [];
-let orders = [];
-
-let revenueChart = null;
-let productChart = null;
-let forecastChart = null;
-
-
-/* =====================================================
-   INITIALIZATION
-===================================================== */
-
-document.addEventListener("DOMContentLoaded", async () => {
-
-    console.log("Orinic Admin Panel Initializing...");
-
-    await checkAdmin();
-
-    setupNavigation();
-
-    setupButtons();
-
-    // Load Dashboard
-    try {
-        await loadDashboard();
-        console.log("Dashboard loaded successfully");
-    } catch (error) {
-        console.error("Dashboard loading failed:", error);
+    // Already an online image URL
+    if (/^https?:\/\//i.test(image)) {
+        return image;
     }
 
-    // Load Products
-    try {
-        await loadProducts();
-        console.log("Products loaded successfully");
-    } catch (error) {
-        console.error("Products loading failed:", error);
+    // Existing local image filename
+    return `../images/${image}`;
+}
+function showNotice(message,type="info"){const n=$("notice");n.textContent=message;n.className=`notice show ${type}`;window.clearTimeout(showNotice.timer);showNotice.timer=window.setTimeout(()=>n.className="notice",6000)}
+function statusBadge(status){const s=norm(status)||"unknown";return `<span class="badge ${safe(s)}">${safe(s)}</span>`}
+function valueOf(obj,keys,fallback="—"){for(const k of keys){if(obj && obj[k]!==undefined && obj[k]!==null && obj[k]!=="")return obj[k]}return fallback}
+function orderStatus(o) {
+    return norm(o.order_status || "pending");
+}
+
+function paymentStatus(o) {
+    return norm(o.payment_status || "pending"); 
+}
+function productNameForItem(item){return valueOf(item,["product_name","name"], products.find(p=>String(p.id)===String(item.product_id))?.name || "Product")}
+document.addEventListener("DOMContentLoaded", init);
+async function init(){
+  $("sideNav").addEventListener("click",e=>{const b=e.target.closest("[data-section]");if(b)navigate(b.dataset.section)});
+  document.querySelectorAll("[data-go]").forEach(b=>b.addEventListener("click",()=>navigate(b.dataset.go)));
+  $("logoutBtn").addEventListener("click",logout);
+  $("addProductBtn").addEventListener("click",()=>openProductModal());
+  ["closeProductModal","cancelProductBtn"].forEach(id=>$(id).addEventListener("click",closeProductModal));
+  $("productModal").addEventListener("click",e=>{if(e.target===$("productModal"))closeProductModal()});
+  $("productForm").addEventListener("submit",saveProduct);
+  $("productImageUpload").addEventListener("change", async function () {
+    const file = this.files[0];
+
+    if (!file) return;
+
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+
+    if (!allowedTypes.includes(file.type)) {
+        showNotice("Please select a JPG, PNG, or WEBP image.", "error");
+        this.value = "";
+        return;
     }
 
-    // Load Orders
-    try {
-        await loadOrders();
-        console.log("Orders loaded successfully");
-    } catch (error) {
-        console.error("Orders loading failed:", error);
+    if (file.size > 5 * 1024 * 1024) {
+        showNotice("Image size must be less than 5 MB.", "error");
+        this.value = "";
+        return;
     }
 
-    // Load Customers
+    const preview = $("productImagePreview");
+
+    preview.src = URL.createObjectURL(file);
+    preview.style.display = "block";
+
+    const safeName = file.name
+        .replace(/[^a-zA-Z0-9._-]/g, "-");
+
+    const filePath = `${Date.now()}-${safeName}`;
+
+    showNotice("Uploading product image...", "info");
+
     try {
-        await loadCustomers();
+        const { data, error } = await supabaseClient
+            .storage
+            .from("product-images")
+            .upload(filePath, file, {
+                cacheControl: "3600",
+                upsert: false
+            });
 
-        await loadPayments();
-        console.log("Customers loaded successfully");
+        if (error) throw error;
+
+        const { data: publicData } = supabaseClient
+            .storage
+            .from("product-images")
+            .getPublicUrl(data.path);
+
+        $("productImage").value = publicData.publicUrl;
+
+        showNotice("Product image uploaded successfully!", "success");
+
     } catch (error) {
-        console.error("Customers loading failed:", error);
+        console.error("Image upload error:", error);
+        showNotice("Image upload failed: " + error.message, "error");
+
+        preview.src = "";
+        preview.style.display = "none";
+        this.value = "";
     }
-
-    // Load Reviews
-    try {
-        await loadReviews();
-        console.log("Reviews loaded successfully");
-    } catch (error) {
-        console.error("Reviews loading failed:", error);
-    }
-
-    console.log("Admin Dashboard Initialization Complete!");
-
 });
-/* =====================================================
-   ADMIN SECURITY
-===================================================== */
+  $("productSearch").addEventListener("input",renderProducts);
+  $("orderSearch").addEventListener("input",renderOrders);
+  $("orderFilter").addEventListener("change",renderOrders);
+  $("customerSearch").addEventListener("input",renderCustomers);
+  $("reviewSearch").addEventListener("input",renderReviews);
+  $("reviewRatingFilter").addEventListener("change",renderReviews);
+  $("refreshOrders").addEventListener("click",loadOrders);
+  $("refreshCustomers").addEventListener("click",loadCustomers);
+  $("refreshReviews").addEventListener("click",loadReviews);
+  const {data:{user},error}=await supabaseClient.auth.getUser();
+  if(error||!user){location.replace("../Login.html");return}
+  const {data:admin,error:adminError}=await supabaseClient.from("admin_users").select("id,full_name,email").eq("id",user.id).maybeSingle();
+  if(adminError||!admin){await supabaseClient.auth.signOut();location.replace("../Login.html");return}
+  $("adminName").textContent=admin.full_name||admin.email||"Administrator";
+  await Promise.all([loadProducts(),loadOrders(),loadCustomers(),loadReviews()]);
+  renderProducts(); renderOrders(); renderCustomers(); renderReviews(); renderDashboard();
+}
+function navigate(name){document.querySelectorAll(".page-section").forEach(s=>s.classList.toggle("active",s.id===`section-${name}`));document.querySelectorAll(".nav-item").forEach(b=>b.classList.toggle("active",b.dataset.section===name));const labels={dashboard:"Dashboard",products:"Products",orders:"Orders",customers:"Customers",reviews:"Product reviews"};$("pageTitle").textContent=labels[name]||"Dashboard";window.scrollTo({top:0,behavior:"smooth"})}
+async function logout(){const {error}=await supabaseClient.auth.signOut();if(error){showNotice("Could not log out: "+error.message,"error");return}location.replace("../Login.html")}
+async function loadProducts(){const {data,error}=await supabaseClient.from("products").select("*").order("created_at",{ascending:false});if(error){showNotice("Products could not be loaded: "+error.message,"error");$("productsBody").innerHTML=`<tr><td colspan="6" class="empty">Unable to load products. Check products-table permissions.</td></tr>`;return}products=data||[];renderProducts();renderDashboard()}
+function renderProducts(){const q=norm($("productSearch").value);const list=products.filter(p=>norm(p.name).includes(q)||norm(p.tag).includes(q));$("productCount").textContent=`${list.length} product${list.length===1?"":"s"}`;$("productsBody").innerHTML=list.length?list.map(p=>`<tr><td><div class="product-cell"><img
+    class="product-thumb"
+    src="${safe(getProductImageUrl(p.image))}"
+    alt="${safe(p.name)}"
+    onerror="this.style.visibility='hidden'"
+><div><b>${safe(p.name)}</b><span class="subtext">ID: ${safe(p.id)}</span></div></div></td><td>${safe(p.tag||"—")}</td><td><b>${money(p.price)}</b></td><td>${safe(p.stock??"—")}</td><td>${safe(p.description||"—")}</td><td><div class="row-actions"><button class="mini-btn edit" data-edit-product="${safe(p.id)}">Edit</button><button class="mini-btn delete" data-delete-product="${safe(p.id)}">Delete</button></div></td></tr>`).join(""):`<tr><td colspan="6" class="empty">No products found.</td></tr>`; $("productsBody").querySelectorAll("[data-edit-product]").forEach(b=>b.addEventListener("click",()=>openProductModal(products.find(p=>String(p.id)===b.dataset.editProduct))));$("productsBody").querySelectorAll("[data-delete-product]").forEach(b=>b.addEventListener("click",()=>deleteProduct(b.dataset.deleteProduct)))}
+function openProductModal(p = null) {
+    $("productForm").reset();
 
-async function checkAdmin() {
+    $("productId").value = p?.id ?? "";
+    $("productModalTitle").textContent = p ? "Update product" : "Add product";
+
+    $("productName").value = p?.name || "";
+    $("productPrice").value = p?.price ?? "";
+    $("productStock").value = p?.stock ?? 0;
+    $("productTag").value = p?.tag || "";
+    $("productImage").value = p?.image || "";
+    $("productDescription").value = p?.description || "";
+    $("productIngredients").value = p?.ingredients || "";
+    $("productNutrition").value = p?.nutritional_info || "";
+    $("productBenefits").value = p?.benefits || "";
+    $("productImage2").value = p?.image_2 || "";
+    $("productImage3").value = p?.image_3 || "";
+
+    $("productImageUpload").value = "";
+
+    const preview = $("productImagePreview");
+
+    if (p?.image) {
+        preview.src = getProductImageUrl(p.image);
+        preview.style.display = "block";
+    } else {
+        preview.src = "";
+        preview.style.display = "none";
+    }
+
+    $("productModal").classList.add("show");
+    $("productModal").setAttribute("aria-hidden", "false");
+}
+function closeProductModal(){$("productModal").classList.remove("show");$("productModal").setAttribute("aria-hidden","true")}
+async function saveProduct(e){e.preventDefault();const id=$("productId").value;const payload={name:$("productName").value.trim(),price:Number($("productPrice").value),tag:$("productTag").value.trim(),description:$("productDescription").value.trim(),image:$("productImage").value.trim(),ingredients:$("productIngredients").value.trim(),nutritional_info:$("productNutrition").value.trim(),benefits:$("productBenefits").value.trim(),image_2:$("productImage2").value.trim(),image_3:$("productImage3").value.trim()};const stock=Number($("productStock").value);if(!payload.name||!Number.isFinite(payload.price)||payload.price<=0||!Number.isInteger(stock)||stock<0){showNotice("Enter a product name, valid price, and non-negative whole-number stock.","error");return}payload.stock=stock;const btn=$("saveProductBtn");btn.disabled=true;btn.textContent="Saving…";try{let result=id?await supabaseClient.from("products").update(payload).eq("id",id):await supabaseClient.from("products").insert(payload);if(result.error)throw result.error;closeProductModal();showNotice(id?"Product updated successfully.":"Product added successfully.","success");await loadProducts()}catch(err){console.error(err);showNotice("Could not save product: "+(err.message||"Database error"),"error")}finally{btn.disabled=false;btn.textContent="Save product"}}
+async function deleteProduct(id){const p=products.find(x=>String(x.id)===String(id));if(!p||!confirm(`Delete “${p.name}” from the catalogue? This cannot be undone.`))return;const {error}=await supabaseClient.from("products").delete().eq("id",id);if(error){showNotice("Could not delete product: "+error.message,"error");return}showNotice("Product deleted.","success");await loadProducts()}
+async function loadOrders(){ $("ordersBody").innerHTML=`<tr><td colspan="9" class="empty">Loading orders…</td></tr>`;const [or,ir,pr]=await Promise.all([supabaseClient.from("orders").select("*").order("created_at",{ascending:false}),supabaseClient.from("order_items").select("*"),supabaseClient.from("payments").select("*").order("created_at",{ascending:false})]);if(or.error){console.error(or.error);$("ordersBody").innerHTML=`<tr><td colspan="9" class="empty">Orders unavailable: ${safe(or.error.message)}</td></tr>`;showNotice("Could not load orders: "+or.error.message,"error");return}orders=or.data||[];orderItems=ir.error?[]:(ir.data||[]);payments=pr.error?[]:(pr.data||[]);renderOrders();renderRecentOrders();renderDashboard()}
+function itemsFor(o){return orderItems.filter(i=>String(i.order_id)===String(o.id))}
+function paymentFor(o){return payments.find(p=>String(p.order_id)===String(o.id))||{}}
+function productText(o){const items=itemsFor(o);if(items.length)return items.map(i=>`${productNameForItem(i)} × ${valueOf(i,["quantity"],1)}`).join(", ");return valueOf(o,["product_name","products"],"—")}
+function orderNumber(o){return valueOf(o,["order_number","razorpay_order_id","id"])}
+function paymentId(o){return valueOf(o,["razorpay_payment_id","payment_id"],valueOf(paymentFor(o),["razorpay_payment_id","payment_id"],"—"))}
+function orderAmount(o){return valueOf(o,["amount","total_amount","total"],valueOf(paymentFor(o),["amount"],0))}
+function address(o){return valueOf(o,["shipping_address","delivery_address","address"],[o.city,o.state,o.postal_code].filter(Boolean).join(", ")||"—")}
+function renderOrders() {
+    const q = norm($("orderSearch").value);
+    const filter = $("orderFilter").value;
+
+    const list = orders.filter(o => {
+        const hay = [
+            orderNumber(o),
+            paymentId(o),
+            o.customer_name,
+            o.customer_email,
+            o.phone,
+            productText(o)
+        ].join(" ");
+
+        const st = orderStatus(o);
+
+        return (!q || norm(hay).includes(q)) &&
+            (filter === "all" || st === filter);
+    });
+
+    $("ordersBody").innerHTML = list.length
+        ? list.map(o => {
+            const st = orderStatus(o);
+            const ps = paymentStatus(o);
+
+            return `
+                <tr>
+                    <td>
+                        <b>${safe(orderNumber(o))}</b>
+                        <span class="subtext">${date(o.created_at)}</span>
+                    </td>
+
+                    <td>${safe(paymentId(o))}</td>
+
+                    <td>
+                        <b>${safe(valueOf(o, ["customer_name"], "Customer"))}</b>
+                        <span class="subtext">${safe(valueOf(o, ["customer_email"], ""))}</span>
+                        <span class="subtext">${safe(valueOf(o, ["phone"], ""))}</span>
+                    </td>
+
+                    <td>${safe(productText(o))}</td>
+
+                    <td><b>${money(orderAmount(o))}</b></td>
+
+                    <td class="address-cell">
+                        ${safe(address(o))}
+                    </td>
+
+                    <td>
+                        <button
+                            type="button"
+                            class="mini-btn edit"
+                            data-copy-order="${safe(o.id)}">
+                            Copy Order Info
+                        </button>
+                    </td>
+
+                    <td>
+                        <select
+                            class="status-select"
+                            data-order-status="${safe(o.id)}"
+                            aria-label="Update delivery status">
+
+                            <option value="pending" ${st === "pending" ? "selected" : ""}>
+                                Pending
+                            </option>
+
+                            <option value="delivered" ${st === "delivered" ? "selected" : ""}>
+                                Delivered
+                            </option>
+                        </select>
+                    </td>
+
+                    <td>
+                        ${statusBadge(ps)}
+                    </td>
+                </tr>
+            `;
+        }).join("")
+        : `<tr><td colspan="9" class="empty">No matching orders found.</td></tr>`;
+
+    // Delivery status change
+    $("ordersBody").querySelectorAll("[data-order-status]")
+        .forEach(select => {
+            select.addEventListener("change", () => {
+                updateOrderStatus(
+                    select.dataset.orderStatus,
+                    select.value
+                );
+            });
+        });
+
+    // Copy order information
+    $("ordersBody").querySelectorAll("[data-copy-order]")
+        .forEach(button => {
+            button.addEventListener("click", () => {
+                copyOrderInfo(button.dataset.copyOrder, button);
+            });
+        });
+}
+async function copyOrderInfo(id, button) {
+
+    const o = orders.find(
+        order => String(order.id) === String(id)
+    );
+
+    if (!o) {
+        showNotice("Order not found.", "error");
+        return;
+    }
+
+    const items = itemsFor(o);
+
+    const productDetails = items.length
+        ? items.map(item =>
+            `${productNameForItem(item)} x ${item.quantity}`
+        ).join("\n")
+        : productText(o);
+
+    const info = `
+ORINIC FOODS - ORDER DETAILS
+
+Order ID: ${orderNumber(o)}
+Order Date: ${new Date(o.created_at).toLocaleString("en-IN")}
+
+CUSTOMER DETAILS
+Customer Name: ${o.customer_name || "—"}
+Phone: ${o.phone || "—"}
+
+PRODUCT DETAILS
+${productDetails}
+
+Total Amount: ${money(orderAmount(o))}
+
+DELIVERY ADDRESS
+${address(o)}
+
+DELIVERY STATUS: ${orderStatus(o) === "delivered" ? "Delivered" : "Pending"}
+
+PAYMENT STATUS: ${paymentStatus(o) === "paid" ? "Paid" : "Pending"}
+
+Razorpay Payment ID: ${paymentId(o)}
+
+Thank you!
+ORINIC FOODS
+`.trim();
+
+    try {
+        await navigator.clipboard.writeText(info);
+
+        const oldText = button.textContent;
+        button.textContent = "Copied!";
+
+        setTimeout(() => {
+            button.textContent = oldText;
+        }, 1500);
+
+        showNotice(
+            "Order information copied successfully!",
+            "success"
+        );
+
+    } catch (error) {
+        console.error("Clipboard error:", error);
+
+        showNotice(
+            "Could not copy order information. Use localhost or HTTPS and allow clipboard access.",
+            "error"
+        );
+    }
+}
+async function updateOrderStatus(id, status) {
+
+    if (!["pending", "delivered"].includes(status)) {
+        showNotice("Invalid delivery status.", "error");
+        await loadOrders();
+        return;
+    }
 
     try {
 
-        // Check logged-in Supabase user
-        const {
-            data: { user },
-            error
-        } = await supabaseClient.auth.getUser();
-
-        if (error || !user) {
-
-            window.location.replace("../Login.html");
-
-            return false;
-
-        }
-
-        // Verify administrator permission
-        const {
-            data: admin,
-            error: adminError
-        } = await supabaseClient
-            .from("admin_users")
-            .select("id, full_name, email")
-            .eq("id", user.id)
+        const { data, error } = await supabaseClient
+            .from("orders")
+            .update({
+                order_status: status
+            })
+            .eq("id", id)
+            .select("id, order_status")
             .maybeSingle();
 
-        if (adminError) {
+        // Check for database errors
+        if (error) {
+            console.error("Order status update error:", error);
 
-            console.error(
-                "Admin verification error:",
-                adminError
+            showNotice(
+                "Update failed: " + error.message,
+                "error"
             );
 
-            document.body.innerHTML =
-                "<h2>Unable to verify administrator access. Please try again.</h2>";
-
-            return false;
-
-        }
-
-        if (!admin) {
-
-            await supabaseClient.auth.signOut();
-
-            window.location.replace("../Login.html");
-
-            return false;
-
-        }
-
-        // Display administrator name
-        const adminName =
-            document.getElementById("adminName");
-
-        if (adminName) {
-
-            adminName.textContent =
-                admin.full_name || "Orinic Foods Admin";
-
-        }
-
-        return true;
-
-    } catch (error) {
-
-        console.error("Admin authentication failed:", error);
-
-        document.body.innerHTML =
-            "<h2>Authentication failed. Please log in again.</h2>";
-
-        return false;
-
-    }
-
-}
-
-/* =====================================================
-   NAVIGATION
-===================================================== */
-
-function setupNavigation() {
-
-    document.querySelectorAll(".nav-item")
-        .forEach(button => {
-
-            button.addEventListener("click", () => {
-
-                const section =
-                    button.dataset.section;
-
-                showSection(section);
-
-            });
-
-        });
-
-
-    document.querySelectorAll(
-        "[data-section-target]"
-    ).forEach(button => {
-
-        button.addEventListener("click", () => {
-
-            showSection(
-                button.dataset.sectionTarget
-            );
-
-        });
-
-    });
-
-}
-
-
-function showSection(sectionId) {
-
-    document.querySelectorAll(".admin-section")
-        .forEach(section => {
-
-            section.classList.remove(
-                "active-section"
-            );
-
-        });
-
-
-    document.getElementById(sectionId)
-        .classList.add("active-section");
-
-
-    document.querySelectorAll(".nav-item")
-        .forEach(button => {
-
-            button.classList.toggle(
-                "active",
-                button.dataset.section === sectionId
-            );
-
-        });
-
-}
-
-
-/* =====================================================
-   BUTTONS
-===================================================== */
-
-function setupButtons() {
-
-    document.getElementById("logoutBtn")
-        .addEventListener("click", logout);
-
-
-    document.getElementById("addProductBtn")
-        .addEventListener("click", () => {
-
-            openProductModal();
-
-        });
-
-
-    document.getElementById("closeProductModal")
-        .addEventListener("click", closeProductModal);
-
-
-    document.getElementById("cancelProductBtn")
-        .addEventListener("click", closeProductModal);
-
-
-    document.getElementById("productForm")
-        .addEventListener("submit", saveProduct);
-
-
-    document.getElementById("productSearch")
-        .addEventListener("input", filterProducts);
-
-
-    
-
-    
-
-
-    document.querySelectorAll(".filter")
-        .forEach(button => {
-
-            button.addEventListener("click", () => {
-
-                document.querySelectorAll(".filter")
-                    .forEach(b =>
-                        b.classList.remove("active")
-                    );
-
-                button.classList.add("active");
-
-                renderOrders(
-                    button.dataset.status
-                );
-
-            });
-
-        });
-
-}
-
-
-/* =====================================================
-   LOGOUT
-===================================================== */
-
-async function logout() {
-
-    const { error } = await supabaseClient.auth.signOut();
-
-    if (error) {
-
-        console.error("Logout error:", error);
-
-        alert("Unable to logout. Please try again.");
-
-        return;
-
-    }
-
-    window.location.replace("../Login.html");
-
-}
-
-
-/* =========================================
-   DASHBOARD - REAL SUPABASE DATA
-========================================= */
-
-async function loadDashboard() {
-
-    const { data, error } = await supabaseClient
-        .from("orders")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-    if (error) {
-
-        console.error("Dashboard loading error:", error);
-
-        alert("Unable to load dashboard: " + error.message);
-
-        return;
-    }
-
-    orders = data || [];
-
-    // Only successful payments count as revenue
-    const paidOrders = orders.filter(order =>
-        String(order.status || "").toLowerCase() === "paid"
-    );
-
-    const pendingOrders = orders.filter(order =>
-        String(order.status || "").toLowerCase() === "pending"
-    );
-
-    // Today's date in local browser timezone
-    const today = new Date();
-
-    const todayKey = [
-        today.getFullYear(),
-        String(today.getMonth() + 1).padStart(2, "0"),
-        String(today.getDate()).padStart(2, "0")
-    ].join("-");
-
-    const todayPaidOrders = paidOrders.filter(order => {
-
-        const date = new Date(order.created_at);
-
-        const orderDate = [
-            date.getFullYear(),
-            String(date.getMonth() + 1).padStart(2, "0"),
-            String(date.getDate()).padStart(2, "0")
-        ].join("-");
-
-        return orderDate === todayKey;
-
-    });
-
-    const todayRevenue = todayPaidOrders.reduce(
-        (sum, order) => sum + Number(order.amount || 0),
-        0
-    );
-
-    // Current month revenue
-    const currentMonth =
-        today.getFullYear() + "-" +
-        String(today.getMonth() + 1).padStart(2, "0");
-
-    const monthlyRevenue = paidOrders
-        .filter(order =>
-            String(order.created_at).slice(0, 7) === currentMonth
-        )
-        .reduce(
-            (sum, order) => sum + Number(order.amount || 0),
-            0
-        );
-
-    // Update dashboard cards
-    document.getElementById("todayRevenue").textContent =
-        formatCurrency(todayRevenue);
-
-    document.getElementById("monthlySales").textContent =
-        formatCurrency(monthlyRevenue);
-
-    document.getElementById("pendingOrders").textContent =
-        pendingOrders.length;
-
-    // Recent orders
-    renderRecentOrders();
-
-    // Revenue chart
-    await loadRevenueChart();
-
-    await loadProductChart();
-
-}
-
-
-/* =========================================
-   RECENT ORDERS
-========================================= */
-
-function renderRecentOrders() {
-
-    const body = document.getElementById("recentOrdersBody");
-
-    if (!body) return;
-
-    body.innerHTML = "";
-
-    orders.slice(0, 5).forEach(order => {
-
-        const row = document.createElement("tr");
-
-        row.innerHTML = `
-
-            <td>
-                ${escapeHTML(order.razorpay_order_id || order.id)}
-            </td>
-
-            <td>
-                ${escapeHTML(order.customer_name || "Customer")}
-            </td>
-
-            <td>
-                Order
-            </td>
-
-            <td>
-                ${formatCurrency(order.amount)}
-            </td>
-
-            <td>
-                ${statusBadge(order.status)}
-            </td>
-
-        `;
-
-        body.appendChild(row);
-
-    });
-
-}
-
-/* =========================================
-   REVENUE CHART - LAST 7 DAYS
-========================================= */
-
-async function loadRevenueChart() {
-
-    const canvas = document.getElementById("revenueChart");
-
-    if (!canvas) return;
-
-    const labels = [];
-    const values = [];
-
-    const today = new Date();
-
-    for (let i = 6; i >= 0; i--) {
-
-        const date = new Date(today);
-
-        date.setDate(today.getDate() - i);
-
-        const key = [
-            date.getFullYear(),
-            String(date.getMonth() + 1).padStart(2, "0"),
-            String(date.getDate()).padStart(2, "0")
-        ].join("-");
-
-        labels.push(
-            date.toLocaleDateString("en-IN", {
-                day: "numeric",
-                month: "short"
-            })
-        );
-
-        const revenue = orders
-            .filter(order => {
-
-                if (
-                    String(order.status || "").toLowerCase() !== "paid"
-                ) {
-                    return false;
-                }
-
-                const orderDate = new Date(order.created_at);
-
-                const orderKey = [
-                    orderDate.getFullYear(),
-                    String(orderDate.getMonth() + 1).padStart(2, "0"),
-                    String(orderDate.getDate()).padStart(2, "0")
-                ].join("-");
-
-                return orderKey === key;
-
-            })
-            .reduce(
-                (sum, order) => sum + Number(order.amount || 0),
-                0
-            );
-
-        values.push(revenue);
-
-    }
-
-    if (revenueChart) {
-        revenueChart.destroy();
-    }
-
-    revenueChart = new Chart(canvas, {
-
-        type: "line",
-
-        data: {
-
-            labels: labels,
-
-            datasets: [{
-
-                label: "Paid Revenue",
-
-                data: values,
-
-                borderWidth: 3,
-
-                tension: 0.35,
-
-                fill: true
-
-            }]
-
-        },
-
-        options: {
-
-            responsive: true,
-
-            maintainAspectRatio: false,
-
-            plugins: {
-
-                legend: {
-                    display: true
-                }
-
-            },
-
-            scales: {
-
-                y: {
-                    beginAtZero: true
-                }
-
-            }
-
-        }
-
-    });
-
-}
-
-
-/* =====================================================
-   PRODUCTS
-===================================================== */
-
-async function loadProducts() {
-
-    const {
-        data,
-        error
-    } = await supabaseClient
-
-        .from("products")
-
-        .select("*")
-
-        .order("created_at", {
-            ascending: true
-        });
-
-
-    if (error) {
-
-        console.error(
-            "Products:",
-            error
-        );
-
-        return;
-
-    }
-
-
-    products = data || [];
-
-    renderProducts(products);
-
-    
-
-}
-
-
-function renderProducts(list) {
-
-    const body = document.getElementById("productsBody");
-
-    if (!body) return;
-
-    body.innerHTML = "";
-
-    if (!list || list.length === 0) {
-        body.innerHTML = `
-            <tr>
-                <td colspan="5">No products found.</td>
-            </tr>
-        `;
-        return;
-    }
-
-    list.forEach(product => {
-
-        const row = document.createElement("tr");
-
-        row.innerHTML = `
-            <td>
-                <div class="product-cell">
-                    <img
-                        src="../images/${escapeHTML(product.image || "")}"
-                        onerror="this.style.display='none'"
-                        alt="${escapeHTML(product.name || "Product")}"
-                    >
-
-                    <div>
-                        ${escapeHTML(product.name || "")}
-                    </div>
-                </div>
-            </td>
-
-            <td>${escapeHTML(product.tag || "Uncategorized")}</td>
-
-            <td>₹${Number(product.price || 0).toFixed(2)}</td>
-
-            <td>${escapeHTML(product.description || "No description")}</td>
-
-            <td>
-                <div class="action-buttons">
-                    <button
-                        class="action-btn edit"
-                        onclick="editProduct('${product.id}')"
-                        title="Edit Product"
-                    >✎</button>
-
-                    <button
-                        class="action-btn delete"
-                        onclick="deleteProduct('${product.id}')"
-                        title="Delete Product"
-                    >🗑</button>
-                </div>
-            </td>
-        `;
-
-        body.appendChild(row);
-
-    });
-
-}
-
-/* =====================================================
-   PRODUCT SEARCH
-===================================================== */
-
-function filterProducts(event) {
-
-    const query =
-        event.target.value
-            .toLowerCase()
-            .trim();
-
-
-    const filtered =
-        products.filter(product =>
-
-            String(product.name || "")
-                .toLowerCase()
-                .includes(query)
-
-        );
-
-
-    renderProducts(filtered);
-
-}
-
-
-/* =====================================================
-   ADD / EDIT PRODUCT
-===================================================== */
-
-function openProductModal(product = null) {
-
-    const modal =
-        document.getElementById(
-            "productModal"
-        );
-
-
-    modal.classList.add("show");
-
-
-    if (!product) {
-
-        document.getElementById(
-            "productModalTitle"
-        ).textContent =
-            "Add Product";
-
-
-        document.getElementById(
-            "productForm"
-        ).reset();
-
-
-        document.getElementById(
-            "productId"
-        ).value = "";
-
-
-        return;
-
-    }
-
-
-    document.getElementById(
-        "productModalTitle"
-    ).textContent =
-        "Edit Product";
-
-
-    document.getElementById(
-        "productId"
-    ).value =
-        product.id;
-
-
-    document.getElementById(
-        "productName"
-    ).value =
-        product.name || "";
-
-
-    document.getElementById(
-        "productPrice"
-    ).value =
-        product.price || 0;
-
-
-    document.getElementById(
-        "productStock"
-    ).value =
-        product.stock || 0;
-
-
-    
-
-
-    document.getElementById(
-        "productTag"
-    ).value =
-        product.tag || "";
-
-
-    document.getElementById(
-        "productDescription"
-    ).value =
-        product.description || "";
-
-
-    document.getElementById(
-        "productImage"
-    ).value =
-        product.image || "";
-
-}
-
-
-function closeProductModal() {
-
-    document.getElementById(
-        "productModal"
-    ).classList.remove("show");
-
-}
-
-
-
-
-async function saveProduct(event) {
-
-    event.preventDefault();
-
-    const id = document.getElementById("productId").value;
-
-    const product = {
-        name: document.getElementById("productName").value.trim(),
-        price: Number(document.getElementById("productPrice").value),
-        stock: Number(document.getElementById("productStock").value),
-        tag: document.getElementById("productTag").value.trim(),
-        description: document.getElementById("productDescription").value.trim(),
-        image: document.getElementById("productImage").value.trim()
-    };
-
-    if (
-        !product.name ||
-        !Number.isFinite(product.price) ||
-        product.price <= 0 ||
-        !Number.isInteger(product.stock) ||
-        product.stock < 0
-    ) {
-        alert("Please enter a valid product name, price and stock quantity.");
-        return;
-    }
-
-    let result;
-
-
-    if (id) {
-        result = await supabaseClient
-            .from("products")
-            .update(product)
-            .eq("id", id);
-    } else {
-        result = await supabaseClient
-            .from("products")
-            .insert(product);
-    }
-
-
-    if (result.error) {
-        console.error("Product save error:", result.error);
-        alert("Unable to save product: " + result.error.message);
-        return;
-
-    }
-
-    alert(id ? "Product updated successfully!" : "Product added successfully!");
-
-    closeProductModal();
-
-    await loadProducts();
-
-}
-
-
-
-/* =====================================================
-   EDIT PRODUCT
-===================================================== */
-
-window.editProduct = function(id) {
-
-    const product =
-        products.find(
-            p => String(p.id) === String(id)
-        );
-
-
-    if (product)
-        openProductModal(product);
-
-};
-
-
-/* =====================================================
-   DELETE PRODUCT
-===================================================== */
-
-window.deleteProduct = async function(id) {
-
-    if (!confirm(
-        "Delete this product?"
-    ))
-        return;
-
-
-    const {
-        error
-    } = await supabaseClient
-
-        .from("products")
-
-        .delete()
-
-        .eq("id", id);
-
-
-    if (error) {
-
-        alert(
-            "Unable to delete product: " +
-            error.message
-        );
-
-        return;
-
-    }
-
-
-    await loadProducts();
-
-};
-
-
-/* =====================================================
-   ORDERS
-===================================================== */
-
-async function loadOrders() {
-
-    const { data, error } = await supabaseClient
-        .from("orders")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-    if (error) {
-        console.error("Orders Error:", error);
-        alert("Unable to load orders: " + error.message);
-        return;
-    }
-
-    orders = data || [];
-
-    // Fetch purchased product names
-    const { data: items, error: itemsError } = await supabaseClient
-        .from("order_items")
-        .select("order_id, product_name, quantity");
-
-    if (itemsError) {
-        console.error("Order Items Error:", itemsError);
-        alert("Unable to load purchased products: " + itemsError.message);
-        return;
-    }
-
-    // Attach product details to their respective orders
-    orders.forEach(order => {
-        order.products = (items || []).filter(
-            item => String(item.order_id) === String(order.id)
-        );
-    });
-
-    renderOrders("all");
-
-}
-
-/* =====================================================
-   RENDER ORDERS
-===================================================== */
-
-function renderOrders(status = "all") {
-
-    const body = document.getElementById("ordersBody");
-
-    if (!body) return;
-
-    body.innerHTML = "";
-
-    let list = orders;
-
-    if (status !== "all") {
-        list = orders.filter(order =>
-            String(order.status || "").toLowerCase() === status.toLowerCase()
-        );
-    }
-
-    if (list.length === 0) {
-        body.innerHTML = `
-            <tr>
-                <td colspan="7">No orders found.</td>
-            </tr>
-        `;
-        return;
-    }
-
-    list.forEach(order => {
-
-        const row = document.createElement("tr");
-
-        const orderNumber = order.razorpay_order_id || order.id;
-
-        const productNames = order.products && order.products.length
-            ? order.products.map(item =>
-                `${item.product_name} × ${item.quantity}`
-              ).join(", ")
-            : "No products found";
-
-        row.innerHTML = `
-            <td>${escapeHTML(String(orderNumber))}</td>
-
-            <td>${escapeHTML(order.customer_name || "Customer")}</td>
-
-            <td>${escapeHTML(productNames)}</td>
-
-            <td>${formatDate(order.created_at)}</td>
-
-            <td>
-                <strong>${formatCurrency(order.amount)}</strong>
-            </td>
-
-            <td>
-                ${statusBadge(order.status)}
-            </td>
-
-            <td>
-                <button
-                    class="action-btn view"
-                    onclick="viewOrder('${order.id}')">
-                    View →
-                </button>
-            </td>
-        `;
-
-        body.appendChild(row);
-
-    });
-
-}
-
-/* =====================================================
-   VIEW ORDER
-===================================================== */
-
-window.viewOrder = async function(id) {
-
-    const order = orders.find(
-        item => String(item.id) === String(id)
-    );
-
-    if (!order) {
-        alert("Order not found!");
-        return;
-    }
-
-    const { data: items, error } = await supabaseClient
-        .from("order_items")
-        .select("product_name, quantity, price")
-        .eq("order_id", order.id);
-
-    if (error) {
-        console.error("Order items error:", error);
-    }
-
-    let itemDetails = "No product details available.";
-
-    if (items && items.length > 0) {
-        itemDetails = items.map(item =>
-            `${item.product_name} x ${item.quantity} - ₹${item.price}`
-        ).join("\n");
-    }
-
-    alert(
-        `Order ID: ${order.razorpay_order_id || order.id}\n` +
-        `Customer: ${order.customer_name || "N/A"}\n` +
-        `Phone: ${order.phone || "N/A"}\n` +
-        `Amount: ₹${order.amount ?? "N/A"}\n` +
-        `Payment Status: ${order.status || "N/A"}\n` +
-        `Date: ${order.created_at || "N/A"}\n` +
-        `Address: ${order.address || "N/A"}\n\n` +
-        `PRODUCTS:\n${itemDetails}`
-    );
-}
-;
-
-/* =====================================================
-   CUSTOMERS
-===================================================== */
-
-async function loadCustomers() {
-
-    const body = document.getElementById("customersBody");
-    const totalCustomers = document.getElementById("totalCustomers");
-
-    if (!body) {
-        console.error("Customers table body not found!");
-        return;
-    }
-
-    body.innerHTML = `
-        <tr>
-            <td colspan="5">Loading customers...</td>
-        </tr>
-    `;
-
-    const { data, error } = await supabaseClient
-        .from("profiles")
-        .select("id, full_name, email, phone, city, created_at")
-        .order("created_at", { ascending: false });
-
-    if (error) {
-        console.error("Customers loading error:", error);
-
-        body.innerHTML = `
-            <tr>
-                <td colspan="5">Unable to load customers.</td>
-            </tr>
-        `;
-
-        return;
-    }
-
-    body.innerHTML = "";
-
-    if (!data || data.length === 0) {
-        body.innerHTML = `
-            <tr>
-                <td colspan="5">No customers registered yet.</td>
-            </tr>
-        `;
-
-        if (totalCustomers) {
-            totalCustomers.textContent = "0";
-        }
-
-        return;
-    }
-
-    data.forEach(customer => {
-
-        const row = document.createElement("tr");
-
-        row.innerHTML = `
-            <td>${escapeHTML(customer.full_name || "Customer")}</td>
-            <td>${escapeHTML(customer.email || "—")}</td>
-            <td>${escapeHTML(customer.phone || "—")}</td>
-            <td>${escapeHTML(customer.city || "—")}</td>
-            <td>${formatDate(customer.created_at)}</td>
-        `;
-
-        body.appendChild(row);
-
-    });
-
-    if (totalCustomers) {
-        totalCustomers.textContent = data.length;
-    }
-
-    console.log("Customers loaded:", data.length);
-}
-
-
-/* =====================================================
-   PAYMENTS
-===================================================== */
-
-async function loadPayments() {
-
-    const body = document.getElementById("paymentsBody");
-
-    if (!body) {
-        console.error("Payments table body not found!");
-        return;
-    }
-
-    body.innerHTML = `
-        <tr>
-            <td colspan="6">Loading payments...</td>
-        </tr>
-    `;
-
-    const { data, error } = await supabaseClient
-        .from("orders")
-        .select(`
-            id,
-            razorpay_order_id,
-            razorpay_payment_id,
-            amount,
-            status,
-            created_at
-        `)
-        .order("created_at", { ascending: false });
-
-    if (error) {
-        console.error("Payments loading error:", error);
-
-        body.innerHTML = `
-            <tr>
-                <td colspan="6">Unable to load payments.</td>
-            </tr>
-        `;
-
-        return;
-    }
-
-    body.innerHTML = "";
-
-    if (!data || data.length === 0) {
-        body.innerHTML = `
-            <tr>
-                <td colspan="6">No payment records found.</td>
-            </tr>
-        `;
-        return;
-    }
-
-    data.forEach(payment => {
-
-        const row = document.createElement("tr");
-
-        row.innerHTML = `
-            <td>
-                ${escapeHTML(payment.razorpay_payment_id || "—")}
-            </td>
-
-            <td>
-                ${escapeHTML(
-                    payment.razorpay_order_id || String(payment.id)
-                )}
-            </td>
-
-            <td>
-                <strong>${formatCurrency(payment.amount)}</strong>
-            </td>
-
-            <td>Razorpay</td>
-
-            <td>
-                ${statusBadge(payment.status)}
-            </td>
-
-            <td>
-                ${formatDate(payment.created_at)}
-            </td>
-        `;
-
-        body.appendChild(row);
-
-    });
-
-    console.log("Payments loaded:", data.length);
-}
-
-/* =====================================================
-   REVIEWS
-===================================================== */
-
-async function loadReviews() {
-
-    const body = document.getElementById("reviewsBody");
-
-    if (!body) {
-        console.error("Reviews table body not found!");
-        return;
-    }
-
-    body.innerHTML = `
-        <tr>
-            <td colspan="6">Loading reviews...</td>
-        </tr>
-    `;
-
-    // Fetch reviews
-    const { data: reviews, error } = await supabaseClient
-        .from("reviews")
-        .select("id, created_at, product_id, user_id, rating, review")
-        .order("created_at", { ascending: false });
-
-    if (error) {
-        console.error("Reviews loading error:", error);
-
-        body.innerHTML = `
-            <tr>
-                <td colspan="6">Unable to load reviews.</td>
-            </tr>
-        `;
-        return;
-    }
-
-    body.innerHTML = "";
-
-    if (!reviews || reviews.length === 0) {
-        body.innerHTML = `
-            <tr>
-                <td colspan="6">No reviews found.</td>
-            </tr>
-        `;
-        console.log("No reviews available.");
-        return;
-    }
-
-    // Collect product and customer IDs
-    const productIds = [...new Set(
-        reviews.map(r => r.product_id).filter(Boolean)
-    )];
-
-    const userIds = [...new Set(
-        reviews.map(r => r.user_id).filter(Boolean)
-    )];
-
-    // Fetch product names
-    let productMap = {};
-
-    if (productIds.length > 0) {
-
-        const { data: productsData, error: productsError } =
-            await supabaseClient
-                .from("products")
-                .select("id, name")
-                .in("id", productIds);
-
-        if (productsError) {
-            console.error("Review products error:", productsError);
-        } else {
-            (productsData || []).forEach(product => {
-                productMap[product.id] = product.name;
-            });
-        }
-    }
-
-    // Fetch customer names
-    let customerMap = {};
-
-    if (userIds.length > 0) {
-
-        const { data: customersData, error: customersError } =
-            await supabaseClient
-                .from("profiles")
-                .select("id, full_name")
-                .in("id", userIds);
-
-        if (customersError) {
-            console.error("Review customers error:", customersError);
-        } else {
-            (customersData || []).forEach(customer => {
-                customerMap[customer.id] = customer.full_name;
-            });
-        }
-    }
-
-    // Display reviews
-    reviews.forEach(review => {
-
-        const row = document.createElement("tr");
-
-        const productName =
-            productMap[review.product_id] || "Product unavailable";
-
-        const customerName =
-            customerMap[review.user_id] || "Customer";
-
-        row.innerHTML = `
-            <td>${escapeHTML(productName)}</td>
-
-            <td>${escapeHTML(customerName)}</td>
-
-            <td>⭐ ${Number(review.rating || 0)}/5</td>
-
-            <td>${escapeHTML(review.review || "No comment")}</td>
-
-            <td>${formatDate(review.created_at)}</td>
-
-            <td>
-                <button
-                    class="action-btn delete"
-                    onclick="deleteReview('${review.id}')"
-                    title="Delete Review"
-                >
-                    🗑
-                </button>
-            </td>
-        `;
-
-        body.appendChild(row);
-
-    });
-
-    console.log("Reviews loaded:", reviews.length);
-}
-
-/* =====================================================
-   DELETE REVIEW
-===================================================== */
-
-window.deleteReview =
-async function(id) {
-
-    if (!confirm(
-        "Delete this review?"
-    ))
-        return;
-
-
-    const {
-        error
-    } = await supabaseClient
-
-        .from("reviews")
-
-        .delete()
-
-        .eq("id", id);
-
-
-    if (error) {
-
-        alert(error.message);
-
-        return;
-
-    }
-
-
-    await loadReviews();
-
-};
-
-
-/* =====================================================
-   REPORTS
-===================================================== */
-
-async function loadReports() {
-
-    const {
-        data,
-        error
-    } = await supabaseClient
-
-        .from("reports")
-
-        .select("*")
-
-        .order("created_at", {
-            ascending: false
-        });
-
-
-    if (error) {
-
-        console.error(
-            "Reports:",
-            error
-        );
-
-        return;
-
-    }
-
-
-    const body =
-        document.getElementById(
-            "reportsBody"
-        );
-
-
-    body.innerHTML = "";
-
-
-    (data || []).forEach(report => {
-
-        const row =
-            document.createElement("tr");
-
-
-        row.innerHTML = `
-
-            <td>
-                <strong>
-                    ${escapeHTML(report.title)}
-                </strong>
-            </td>
-
-            <td>
-                ${escapeHTML(report.report_type)}
-            </td>
-
-            <td>
-                ${escapeHTML(
-                    report.description || ""
-                )}
-            </td>
-
-            <td>
-                ${formatDate(report.created_at)}
-            </td>
-
-            <td>
-
-                <button
-                    class="action-btn delete"
-                    onclick="deleteReport('${report.id}')"
-                >
-                    🗑
-                </button>
-
-            </td>
-
-        `;
-
-
-        body.appendChild(row);
-
-    });
-
-}
-
-
-/* =====================================================
-   CREATE REPORT
-===================================================== */
-
-async function createReport() {
-
-    const title =
-        prompt(
-            "Enter report title:"
-        );
-
-
-    if (!title)
-        return;
-
-
-    const type =
-        prompt(
-            "Report type:",
-            "Sales Report"
-        );
-
-
-    const description =
-        prompt(
-            "Report description:",
-            "Generated from Orinic Foods Admin Panel"
-        );
-
-
-    const {
-        data: {
-            user
-        }
-    } =
-        await supabaseClient.auth.getUser();
-
-
-    const {
-        error
-    } = await supabaseClient
-
-        .from("reports")
-
-        .insert({
-
-            title,
-
-            report_type:
-                type || "General",
-
-            description:
-
-                description || "",
-
-            created_by:
-                user.id
-
-        });
-
-
-    if (error) {
-
-        alert(error.message);
-
-        return;
-
-    }
-
-
-    await loadReports();
-
-}
-
-
-/* =====================================================
-   DELETE REPORT
-===================================================== */
-
-window.deleteReport =
-async function(id) {
-
-    if (!confirm(
-        "Delete this report?"
-    ))
-        return;
-
-
-    const {
-        error
-    } = await supabaseClient
-
-        .from("reports")
-
-        .delete()
-
-        .eq("id", id);
-
-
-    if (error) {
-
-        alert(error.message);
-
-        return;
-
-    }
-
-
-    await loadReports();
-
-};
-
-
-/* =====================================================
-   ANALYTICS
-===================================================== */
-
-async function loadAnalytics() {
-
-    const total =
-        orders.reduce(
-            (sum, order) =>
-                sum +
-                Number(order.total_amount || 0),
-            0
-        );
-
-
-    const average =
-        orders.length
-            ? total / orders.length
-            : 0;
-
-
-    document.getElementById(
-        "avgOrderValue"
-    ).textContent =
-        formatCurrency(average);
-
-
-    await loadForecastChart();
-
-}
-
-
-/* =====================================================
-   FORECAST
-===================================================== */
-
-async function loadForecastChart() {
-
-    const labels = [
-        "Aug",
-        "Sep",
-        "Oct"
-    ];
-
-
-    const values = [
-        520,
-        570,
-        640
-    ];
-
-
-    const ctx =
-        document.getElementById(
-            "forecastChart"
-        );
-
-
-    if (forecastChart)
-        forecastChart.destroy();
-
-
-    forecastChart =
-        new Chart(ctx, {
-
-            type: "bar",
-
-            data: {
-
-                labels,
-
-                datasets: [{
-
-                    label: "Predicted Units",
-
-                    data: values,
-
-                    borderWidth: 0
-
-                }]
-
-            },
-
-            options: {
-
-                responsive: true,
-
-                plugins: {
-
-                    legend: {
-                        display: false
-                    }
-
-                },
-
-                scales: {
-
-                    y: {
-                        beginAtZero: true
-                    }
-
-                }
-
-            }
-
-        });
-
-}
-
-
-/* =====================================================
-   PRODUCT CHART - PAID PRODUCT REVENUE
-===================================================== */
-
-async function loadProductChart() {
-
-    const ctx = document.getElementById("productChart");
-
-    if (!ctx) return;
-
-    try {
-
-        // Get successfully paid orders
-        const { data: paidOrders, error: ordersError } =
-            await supabaseClient
-                .from("orders")
-                .select("id")
-                .eq("status", "paid");
-
-        if (ordersError) throw ordersError;
-
-        // Destroy previous chart
-        if (productChart) {
-            productChart.destroy();
-            productChart = null;
-        }
-
-        const orderIds = (paidOrders || []).map(order => order.id);
-
-        // No paid orders available
-        if (orderIds.length === 0) {
-
-            productChart = new Chart(ctx, {
-                type: "doughnut",
-                data: {
-                    labels: ["No paid sales yet"],
-                    datasets: [{
-                        data: [1]
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            position: "bottom"
-                        }
-                    }
-                }
-            });
-
+            await loadOrders();
             return;
         }
 
-        // Get items belonging to paid orders
-        const { data: items, error: itemsError } =
-            await supabaseClient
-                .from("order_items")
-                .select("product_name, price, quantity")
-                .in("order_id", orderIds);
+        // Check whether Supabase actually updated a row
+        if (!data) {
 
-        if (itemsError) throw itemsError;
+            console.error(
+                "No order was updated. Check the RLS UPDATE policy.",
+                { id, status }
+            );
 
-        // Calculate revenue product-wise
-        const revenueByProduct = {};
+            showNotice(
+                "No row updated. Check Supabase RLS permissions.",
+                "error"
+            );
 
-        (items || []).forEach(item => {
+            await loadOrders();
+            return;
+        }
 
-            const name = item.product_name || "Unknown Product";
+        // Update local order data
+        const order = orders.find(
+            o => String(o.id) === String(data.id)
+        );
 
-            const revenue =
-                Number(item.price || 0) *
-                Number(item.quantity || 0);
+        if (order) {
+            order.order_status = data.order_status;
+        }
 
-            revenueByProduct[name] =
-                (revenueByProduct[name] || 0) + revenue;
+        showNotice(
+            "Delivery status updated successfully!",
+            "success"
+        );
 
-        });
-
-        const labels = Object.keys(revenueByProduct);
-
-        const values = Object.values(revenueByProduct);
-
-        // Display chart
-        productChart = new Chart(ctx, {
-
-            type: "doughnut",
-
-            data: {
-
-                labels: labels.length ? labels : ["No product sales"],
-
-                datasets: [{
-
-                    label: "Paid Revenue",
-
-                    data: labels.length ? values : [1],
-
-                    borderWidth: 2
-
-                }]
-
-            },
-
-            options: {
-
-                responsive: true,
-
-                maintainAspectRatio: false,
-
-                plugins: {
-
-                    legend: {
-                        position: "bottom"
-                    },
-
-                    tooltip: {
-
-                        callbacks: {
-
-                            label: function(context) {
-
-                                const amount = Number(context.raw || 0);
-
-                                return context.label + ": " +
-                                    new Intl.NumberFormat("en-IN", {
-                                        style: "currency",
-                                        currency: "INR",
-                                        maximumFractionDigits: 2
-                                    }).format(amount);
-
-                            }
-
-                        }
-
-                    }
-
-                }
-
-            }
-
-        });
+        await loadOrders();
 
     } catch (error) {
 
-        console.error("Product Chart Error:", error);
+        console.error(error);
 
-    }
-
-}
-
-
-
-
-
-/* =====================================================
-   HELPERS
-===================================================== */
-
-function formatCurrency(value) {
-
-    return new Intl.NumberFormat(
-        "en-IN",
-        {
-            style: "currency",
-            currency: "INR",
-            maximumFractionDigits: 0
-        }
-    ).format(
-        Number(value || 0)
-    );
-
-}
-
-
-function formatDate(date) {
-
-    if (!date)
-        return "—";
-
-
-    return new Date(date)
-        .toLocaleDateString(
-            "en-IN",
-            {
-                day: "2-digit",
-                month: "short",
-                year: "numeric"
-            }
+        showNotice(
+            "Unexpected error: " + error.message,
+            "error"
         );
 
+        await loadOrders();
+    }
+}
+function renderRecentOrders(){const list=orders.slice(0,6);$("recentOrdersBody").innerHTML=list.length?list.map(o=>`<tr><td><b>${safe(orderNumber(o))}</b><span class="subtext">${date(o.created_at)}</span></td><td>${safe(valueOf(o,["customer_name"],"Customer"))}</td><td>${safe(productText(o))}</td><td><b>${money(orderAmount(o))}</b></td><td>${statusBadge(orderStatus(o))}</td></tr>`).join(""):`<tr><td colspan="5" class="empty">No orders received yet.</td></tr>`}
+async function loadCustomers(){ $("customersBody").innerHTML=`<tr><td colspan="6" class="empty">Loading customers…</td></tr>`;const {data,error}=await supabaseClient.from("profiles").select("*").order("created_at",{ascending:false});if(error){console.error(error);$("customersBody").innerHTML=`<tr><td colspan="6" class="empty">Customers unavailable: ${safe(error.message)}</td></tr>`;showNotice("Could not load customers: "+error.message,"error");return}customers=data||[];renderCustomers();renderDashboard()}
+function customerOrderCount(c){return orders.filter(o=>{const linkedIds=[o.customer_id,o.user_id,o.profile_id].filter(v=>v!==undefined&&v!==null).map(String);const emails=[o.customer_email,o.email].filter(Boolean).map(norm);const names=[o.customer_name,o.full_name].filter(Boolean).map(norm);return linkedIds.includes(String(c.id))||(c.email&&emails.includes(norm(c.email)))||(valueOf(c,["full_name","name"],"")&&names.includes(norm(valueOf(c,["full_name","name"],""))))}).length}
+function renderCustomers() {
+    const q = norm($("customerSearch").value);
+
+    const list = customers.filter(c =>
+        norm([
+            c.full_name,
+            c.name,
+            c.email,
+            c.phone,
+            c.address
+        ].join(" ")).includes(q)
+    );
+
+    $("customerCount").textContent =
+        `${list.length} customer${list.length === 1 ? "" : "s"}`;
+
+    $("customersBody").innerHTML = list.length
+        ? list.map(c => {
+            const count = reviews.filter(
+                r => String(r.user_id) === String(c.id)
+            ).length;
+
+            const ordersCount = customerOrderCount(c);
+
+            return `
+                <tr>
+                    <td><b>${safe(valueOf(c, ["full_name", "name"], "Customer"))}</b></td>
+                    <td>${safe(c.email || "—")}</td>
+                    <td>${safe(c.phone || "—")}</td>
+                    <td>${safe(c.address || "—")}</td>
+                    <td><b>${ordersCount}</b></td>
+                    <td>
+                        <button
+                            class="mini-btn edit"
+                            data-customer-reviews="${safe(c.id)}"
+                        >${count} view</button>
+                    </td>
+                </tr>
+            `;
+        }).join("")
+        : `<tr><td colspan="6" class="empty">No customers found.</td></tr>`;
+
+    $("customersBody")
+        .querySelectorAll("[data-customer-reviews]")
+        .forEach(b => b.addEventListener("click", () => {
+            navigate("reviews");
+
+            $("reviewSearch").value =
+                customers.find(c =>
+                    String(c.id) === b.dataset.customerReviews
+                )?.email || "";
+
+            renderReviews();
+        }));
 }
 
-
-function statusBadge(status) {
-
-    const clean =
-        String(status || "pending")
-            .toLowerCase();
-
-
-    return `
-        <span class="status ${clean}">
-            ${clean}
-        </span>
-    `;
-
-}
-
-
-function escapeHTML(value) {
-
-    return String(value ?? "")
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
-
-}
+async function loadReviews(){ $("reviewsBody").innerHTML=`<tr><td colspan="5" class="empty">Loading reviews…</td></tr>`;const {data,error}=await supabaseClient.from("reviews").select("*").order("created_at",{ascending:false});if(error){console.error(error);reviews=[];$("reviewsBody").innerHTML=`<tr><td colspan="5" class="empty">Reviews unavailable: ${safe(error.message)}</td></tr>`;showNotice("Could not load reviews: "+error.message,"error");return}reviews=data||[];renderReviews();renderCustomers();renderDashboard()}
+function renderReviews(){const q=norm($("reviewSearch").value),rating=$("reviewRatingFilter").value;const list=reviews.filter(r=>{const p=products.find(x=>String(x.id)===String(r.product_id));const c=customers.find(x=>String(x.id)===String(r.user_id));return (!q||norm([p?.name,r.product_name,r.review,r.comment,c?.full_name,c?.email].join(" ")).includes(q))&&(rating==="all"||String(r.rating)===rating)});const average=reviews.length?reviews.reduce((s,r)=>s+Number(r.rating||0),0)/reviews.length:0;$("reviewSummary").innerHTML=`<div class="summary-pill"><b>${reviews.length}</b> reviews</div><div class="summary-pill"><b>★ ${average.toFixed(1)}</b> average rating</div>`;$("reviewsBody").innerHTML=list.length?list.map(r=>{const p=products.find(x=>String(x.id)===String(r.product_id)),c=customers.find(x=>String(x.id)===String(r.user_id));const stars="★".repeat(Math.max(0,Math.min(5,Number(r.rating)||0)))+"☆".repeat(5-Math.max(0,Math.min(5,Number(r.rating)||0)));return `<tr><td><b>${safe(p?.name||r.product_name||"Product")}</b></td><td>${safe(c?.full_name||r.customer_name||"Customer")}<span class="subtext">${safe(c?.email||"")}</span></td><td><span class="stars">${stars}</span><span class="subtext">${safe(r.rating||0)}/5</span></td><td><div class="review-text">${safe(valueOf(r,["review","comment","content"],"No written comment"))}</div></td><td>${date(r.created_at)}</td></tr>`}).join(""):`<tr><td colspan="5" class="empty">No matching reviews found.</td></tr>`}
+function renderDashboard(){const paid=orders.filter(o=>paymentStatus(o)==="paid");const revenue=paid.reduce((sum,o)=>sum+Number(orderAmount(o)||0),0);const pending=orders.filter(o=>orderStatus(o)==="pending").length;$("statRevenue").textContent=money(revenue);$("statOrders").textContent=orders.length;$("statPendingOrders").textContent=pending;$("statCustomers").textContent=customers.length;$("statProducts").textContent=products.length;$("pendingOrdersCount").textContent=pending;$("pendingBadge").textContent=pending;$("reviewsCount").textContent=reviews.length;$("latestOrderDate").textContent=orders.length?date(orders[0].created_at):"—";renderRecentOrders()}

@@ -1,806 +1,107 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-
 <head>
-
-    <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-
-    <title>Admin Dashboard | Orinic Foods</title>
-
-    <link
-        href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@300;400;500;600;700&display=swap"
-        rel="stylesheet"
-    >
-
-    <link rel="stylesheet" href="admin.css">
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin Dashboard | Orinic Foods</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="admin.css">
 </head>
-
-
 <body>
-
-
-<!-- =====================================================
-     SIDEBAR
-===================================================== -->
-
-<aside class="sidebar">
-
-    <div class="sidebar-brand">
-
-        <img
-            src="../images/logo.png"
-            alt="Orinic Foods"
-        >
-
-        <span>Orinic</span>
-
-    </div>
-
-
-    <nav class="sidebar-nav">
-
-        <button
-            class="nav-item active"
-            data-section="dashboard"
-        >
-            <span>▦</span>
-            Dashboard
-        </button>
-
-
-        <button
-            class="nav-item"
-            data-section="products"
-        >
-            <span>◇</span>
-            Products
-        </button>
-
-
-        <button
-            class="nav-item"
-            data-section="orders"
-        >
-            <span>🛒</span>
-            Orders
-        </button>
-
-
-        <button
-            class="nav-item"
-            data-section="customers"
-        >
-            <span>♧</span>
-            Customers
-        </button>
-
-
-        <button
-            class="nav-item"
-            data-section="payments"
-        >
-            <span>▭</span>
-            Payments
-        </button>
-
-
-        <button
-            class="nav-item"
-            data-section="reviews"
-        >
-            <span>☆</span>
-            Reviews
-        </button>
-
-
-       
-
-
+<div class="app-shell">
+  <aside class="sidebar">
+    <a class="brand" href="../index.html"><img src="../images/logo.png" alt=""><span><b>orinic</b><small>FOODS · ADMIN</small></span></a>
+    <div class="nav-label">WORKSPACE</div>
+    <nav id="sideNav">
+      <button class="nav-item active" data-section="dashboard"><span>▦</span>Dashboard</button>
+      <button class="nav-item" data-section="products"><span>◇</span>Products</button>
+      <button class="nav-item" data-section="orders"><span>▤</span>Orders <i id="pendingBadge">0</i></button>
+      <button class="nav-item" data-section="customers"><span>♙</span>Customers</button>
+      <button class="nav-item" data-section="reviews"><span>☆</span>Product reviews</button>
     </nav>
-
-
-    
-</aside>
-
-
-<!-- =====================================================
-     MAIN
-===================================================== -->
-
-<main class="main-content">
-
-
-    <!-- HEADER -->
-
-    <header class="topbar">
-
-        <div></div>
-
-        <div class="admin-user">
-
-            
-
-            <div class="user-pill">
-
-                <div class="avatar">
-                    AO
-                </div>
-
-                <span id="adminName">
-                    Admin Orinic
-                </span>
-
-            </div>
-
-            <button id="logoutBtn">
-                Logout
-            </button>
-
-        </div>
-
-    </header>
-
-
-    <!-- =================================================
-         DASHBOARD
-    ================================================= -->
-
-    <section
-        id="dashboard"
-        class="admin-section active-section"
-    >
-
-        <div class="page-heading">
-
-            <div>
-
-                <h1>Dashboard</h1>
-
-                <p>
-                    Orinic Foods Admin Panel
-                </p>
-
-            </div>
-
-        </div>
-
-
-        <div class="stats-grid">
-
-            <div class="stat-card">
-
-                <div class="stat-icon green">
-                    ▭
-                </div>
-
-                <h2 id="todayRevenue">
-                    ₹0
-                </h2>
-
-                <p>Today's Revenue</p>
-
-                <small id="revenueChange">
-                    Revenue overview
-                </small>
-
-            </div>
-
-
-            <div class="stat-card">
-
-                <div class="stat-icon purple">
-                    ↗
-                </div>
-
-                <h2 id="monthlySales">
-                    ₹0
-                </h2>
-
-                <p>Monthly Sales</p>
-
-                <small>
-                    Current month
-                </small>
-
-            </div>
-
-
-            <div class="stat-card">
-
-                <div class="stat-icon orange">
-                    ♧
-                </div>
-
-                <h2 id="totalCustomers">
-                    0
-                </h2>
-
-                <p>Total Customers</p>
-
-                <small>
-                    Registered users
-                </small>
-
-            </div>
-
-
-            <div class="stat-card">
-
-                <div class="stat-icon brown">
-                    🛒
-                </div>
-
-                <h2 id="pendingOrders">
-                    0
-                </h2>
-
-                <p>Pending Orders</p>
-
-                <small>
-                    Orders requiring attention
-                </small>
-
-            </div>
-
-        </div>
-
-
-        <div class="dashboard-grid">
-
-            <div class="panel large-panel">
-
-                <div class="panel-header">
-
-                    <h2>Revenue & Orders</h2>
-
-                    <select id="revenuePeriod">
-
-                        <option value="7">
-                            Last 7 Days
-                        </option>
-
-                        <option value="30">
-                            Last 30 Days
-                        </option>
-
-                    </select>
-
-                </div>
-
-                <canvas id="revenueChart"></canvas>
-
-            </div>
-
-
-            <div class="panel">
-
-                <div class="panel-header">
-
-                    <h2>Sales by Product</h2>
-
-                </div>
-
-                <canvas id="productChart"></canvas>
-
-            </div>
-
-        </div>
-
-
-        <div class="panel">
-
-            <div class="panel-header">
-
-                <h2>Recent Orders</h2>
-
-                <button
-                    class="text-button"
-                    data-section-target="orders"
-                >
-                    View all →
-                </button>
-
-            </div>
-
-
-            <div class="table-container">
-
-                <table>
-
-                    <thead>
-
-                        <tr>
-
-                            <th>ORDER ID</th>
-                            <th>CUSTOMER</th>
-                            <th>PRODUCT</th>
-                            <th>AMOUNT</th>
-                            <th>STATUS</th>
-
-                        </tr>
-
-                    </thead>
-
-                    <tbody id="recentOrdersBody">
-
-                    </tbody>
-
-                </table>
-
-            </div>
-
-        </div>
-
+  </aside>
+  <main class="main">
+    <header class="topbar"><div><p class="eyebrow">ORINIC FOODS / ADMIN</p><h1 id="pageTitle">Dashboard</h1></div><div class="top-actions"><span class="admin-chip"><span class="avatar">O</span><span><b id="adminName">Administrator</b><small>Store admin</small></span></span><button id="logoutBtn" class="logout-btn">Log out ↗</button></div></header>
+    <div id="notice" class="notice" role="status"></div>
+    <section class="page-section active" id="section-dashboard">
+      <div class="welcome-row"><div><h2>Good to see you.</h2><p>Here’s what’s happening with your store.</p></div><button class="button primary" data-go="products">＋ Add product</button></div>
+      <div class="stat-grid">
+        <article class="stat-card"><div class="stat-top"><span>Total revenue</span><span class="stat-icon green">₹</span></div><strong id="statRevenue">₹0</strong><small>From paid orders</small></article>
+        <article class="stat-card"><div class="stat-top"><span>Total orders</span><span class="stat-icon sand">▤</span></div><strong id="statOrders">0</strong><small>All order records</small></article>
+        <article class="stat-card"><div class="stat-top"><span>Pending orders</span><span class="stat-icon peach">◷</span></div><strong id="statPendingOrders">0</strong><small>Awaiting delivery</small></article>
+        <article class="stat-card"><div class="stat-top"><span>Customers</span><span class="stat-icon blue">♙</span></div><strong id="statCustomers">0</strong><small>Registered accounts</small></article>
+        <article class="stat-card"><div class="stat-top"><span>Products</span><span class="stat-icon peach">◇</span></div><strong id="statProducts">0</strong><small>In your catalogue</small></article>
+      </div>
+      <div class="dashboard-grid">
+        <article class="panel"><div class="panel-heading"><div><h3>Recent orders</h3><p>Latest activity from your store</p></div><button class="text-button" data-go="orders">View all →</button></div><div class="table-wrap"><table><thead><tr><th>ORDER</th><th>CUSTOMER</th><th>PRODUCT</th><th>AMOUNT</th><th>STATUS</th></tr></thead><tbody id="recentOrdersBody"><tr><td colspan="5" class="empty">Loading orders…</td></tr></tbody></table></div></article>
+        <article class="panel quick-panel"><div class="panel-heading"><div><h3>Store overview</h3><p>Quick catalogue summary</p></div></div><div class="overview-line"><span>Pending orders</span><b id="pendingOrdersCount">0</b></div><div class="overview-line"><span>Reviews received</span><b id="reviewsCount">0</b></div><div class="overview-line"><span>Latest order</span><b id="latestOrderDate">—</b></div><button class="button secondary full" data-go="reviews">Read customer reviews</button></article>
+      </div>
     </section>
-
-
-    <!-- =================================================
-         PRODUCTS
-    ================================================= -->
-
-    <section
-        id="products"
-        class="admin-section"
-    >
-
-        <div class="page-heading">
-
-            <div>
-
-                <h1>Products</h1>
-
-                <p>
-                    Orinic Foods Admin Panel
-                </p>
-
-            </div>
-
-        </div>
-
-
-        <div class="toolbar">
-
-            <input
-                type="search"
-                id="productSearch"
-                placeholder="⌕ Search products..."
-            >
-
-            <button
-                id="addProductBtn"
-                class="primary-btn"
-            >
-                + Add Product
-            </button>
-
-        </div>
-
-
-        <div class="panel">
-
-            <div class="table-container">
-
-                <table>
-    <thead>
-        <tr>
-            <th>PRODUCT</th>
-            <th>CATEGORY</th>
-            <th>PRICE</th>
-            <th>DESCRIPTION</th>
-            <th>ACTIONS</th>
-        </tr>
-    </thead>
-
-    <tbody id="productsBody">
-    </tbody>
-</table>
-
-            </div>
-
-        </div>
-
+    <section class="page-section" id="section-products">
+      <div class="section-intro"><div><h2>Products</h2><p>Add new products, update details, or remove items from the catalogue.</p></div><button id="addProductBtn" class="button primary">＋ Add product</button></div>
+      <div class="toolbar"><label class="searchbox">⌕ <input id="productSearch" placeholder="Search products…"></label><span class="result-count" id="productCount">0 products</span></div>
+      <div class="panel table-panel"><div class="table-wrap"><table><thead><tr><th>PRODUCT</th><th>TAG</th><th>PRICE</th><th>STOCK</th><th>DESCRIPTION</th><th>ACTIONS</th></tr></thead><tbody id="productsBody"><tr><td colspan="6" class="empty">Loading products…</td></tr></tbody></table></div></div>
     </section>
-
-
-    <!-- =================================================
-         ORDERS
-    ================================================= -->
-
-    <section
-        id="orders"
-        class="admin-section"
-    >
-
-        <div class="page-heading">
-
-            <div>
-
-                <h1>Orders</h1>
-
-                <p>
-                    Orinic Foods Admin Panel
-                </p>
-
-            </div>
-
-        </div>
-
-
-        <div class="panel">
-
-            <div class="panel-header">
-
-                <h2>All Orders</h2>
-
-                <div class="filter-buttons">
-
-                    <button class="filter active" data-status="all">
-                        All
-                    </button>
-
-                    <button class="filter" data-status="pending">
-                        Pending
-                    </button>
-
-                    <button class="filter" data-status="shipped">
-                        Shipped
-                    </button>
-
-                    <button class="filter" data-status="delivered">
-                        Delivered
-                    </button>
-
-                </div>
-
-            </div>
-
-
-            <div class="table-container">
-
-                <table>
-
-                    <thead>
-
-                        <tr>
-
-                            <th>ORDER ID</th>
-                            <th>CUSTOMER</th>
-                            <th>PRODUCT</th>
-                            <th>DATE</th>
-                            <th>AMOUNT</th>
-                            <th>STATUS</th>
-                            <th>ACTION</th>
-
-                        </tr>
-
-                    </thead>
-
-                    <tbody id="ordersBody">
-
-                    </tbody>
-
-                </table>
-
-            </div>
-
-        </div>
-
+    <section class="page-section" id="section-orders">
+      <div class="section-intro"><div><h2>Orders</h2><p>Review payment details, delivery information and update order status.</p></div><button class="button secondary" id="refreshOrders">↻ Refresh</button></div>
+      <div class="toolbar"><label class="searchbox">⌕ <input id="orderSearch" placeholder="Search order, customer, payment ID…"></label><select id="orderFilter" class="select"><option value="all">All statuses</option><option value="pending">Pending</option><option value="delivered">Delivered</option></select></div>
+      <div class="panel table-panel"><div class="table-wrap"><table class="wide-table"><thead><tr>
+    <th>ORDER / DATE</th>
+    <th>PAYMENT ID</th>
+    <th>CUSTOMER</th>
+    <th>PRODUCT / QTY</th>
+    <th>AMOUNT</th>
+    <th>DELIVERY ADDRESS</th>
+    <th>COPY ORDER INFO</th>
+    <th>ORDER STATUS</th>
+    <th>PAYMENT STATUS</th>
+</tr></thead><tbody id="ordersBody"><tr><td colspan="9" class="empty">Loading orders…</td></tr></tbody></table></div></div>
     </section>
-
-
-    <!-- =================================================
-         CUSTOMERS
-    ================================================= -->
-
-    <section
-        id="customers"
-        class="admin-section"
-    >
-
-        <div class="page-heading">
-
-            <div>
-
-                <h1>Customers</h1>
-
-                <p>
-                    Customer information and activity
-                </p>
-
-            </div>
-
-        </div>
-
-
-        <div class="panel">
-
-            <div class="table-container">
-
-                <table>
-
-                    <thead>
-
-                        <tr>
-
-                            <th>NAME</th>
-                            <th>EMAIL</th>
-                            <th>PHONE</th>
-                            <th>CITY</th>
-                            <th>MEMBER SINCE</th>
-
-                        </tr>
-
-                    </thead>
-
-                    <tbody id="customersBody">
-
-                    </tbody>
-
-                </table>
-
-            </div>
-
-        </div>
-
+    <section class="page-section" id="section-customers">
+      <div class="section-intro"><div><h2>Customers</h2><p>Customer information is view-only here. Review their account details and feedback.</p></div><button class="button secondary" id="refreshCustomers">↻ Refresh</button></div>
+      <div class="toolbar"><label class="searchbox">⌕ <input id="customerSearch" placeholder="Search name, email, phone…"></label><span class="result-count" id="customerCount">0 customers</span></div>
+      <div class="panel table-panel"><div class="table-wrap"><table><thead><tr><th>CUSTOMER</th><th>EMAIL</th><th>PHONE</th><th>ADDRESS</th><th>ORDERS</th><th>REVIEWS</th></tr></thead><tbody id="customersBody"><tr><td colspan="6" class="empty">Loading customers…</td></tr></tbody></table></div></div>
     </section>
-
-
-    <!-- =================================================
-         PAYMENTS
-    ================================================= -->
-
-    <section
-        id="payments"
-        class="admin-section"
-    >
-
-        <div class="page-heading">
-
-            <div>
-
-                <h1>Payments</h1>
-
-                <p>
-                    Payment transactions
-                </p>
-
-            </div>
-
-        </div>
-
-
-        <div class="panel">
-
-            <div class="table-container">
-
-                <table>
-
-                    <thead>
-
-                        <tr>
-
-                            <th>PAYMENT ID</th>
-                            <th>ORDER</th>
-                            <th>AMOUNT</th>
-                            <th>GATEWAY</th>
-                            <th>STATUS</th>
-                            <th>DATE</th>
-
-                        </tr>
-
-                    </thead>
-
-                    <tbody id="paymentsBody">
-
-                    </tbody>
-
-                </table>
-
-            </div>
-
-        </div>
-
+    <section class="page-section" id="section-reviews">
+      <div class="section-intro"><div><h2>Product reviews</h2><p>Read ratings and comments submitted by customers. Reviews are not editable here.</p></div><button class="button secondary" id="refreshReviews">↻ Refresh</button></div>
+      <div class="review-summary" id="reviewSummary"></div>
+      <div class="toolbar"><label class="searchbox">⌕ <input id="reviewSearch" placeholder="Search product or review…"></label><select id="reviewRatingFilter" class="select"><option value="all">All ratings</option><option value="5">5 stars</option><option value="4">4 stars</option><option value="3">3 stars</option><option value="2">2 stars</option><option value="1">1 star</option></select></div>
+      <div class="panel table-panel"><div class="table-wrap"><table><thead><tr><th>PRODUCT</th><th>CUSTOMER</th><th>RATING</th><th>REVIEW</th><th>DATE</th></tr></thead><tbody id="reviewsBody"><tr><td colspan="5" class="empty">Loading reviews…</td></tr></tbody></table></div></div>
     </section>
-
-
-    <!-- =================================================
-         REVIEWS
-    ================================================= -->
-
-    <section
-        id="reviews"
-        class="admin-section"
-    >
-
-        <div class="page-heading">
-
-            <div>
-
-                <h1>Reviews</h1>
-
-                <p>
-                    Manage customer reviews
-                </p>
-
-            </div>
-
-        </div>
-
-
-        <div class="panel">
-
-            <div class="table-container">
-
-                <table>
-
-                    <thead>
-
-                        <tr>
-
-                            <th>PRODUCT</th>
-                            <th>CUSTOMER</th>
-                            <th>RATING</th>
-                            <th>REVIEW</th>
-                            <th>DATE</th>
-                            <th>ACTION</th>
-
-                        </tr>
-
-                    </thead>
-
-                    <tbody id="reviewsBody">
-
-                    </tbody>
-
-                </table>
-
-            </div>
-
-        </div>
-
-    </section>
-
-</main>
-
-
-<!-- =====================================================
-     PRODUCT MODAL
-===================================================== -->
-
-<div
-    id="productModal"
-    class="modal"
->
-
-    <div class="modal-card">
-
-        <button
-            class="modal-close"
-            id="closeProductModal"
-        >
-            ×
-        </button>
-
-        <h2 id="productModalTitle">
-            Add Product
-        </h2>
-
-        <form id="productForm">
-
-            <input
-                type="hidden"
-                id="productId"
-            >
-
-            <div class="modal-grid">
-
-                <div>
-
-                    <label>Product Name</label>
-
-                    <input
-                        id="productName"
-                        required
-                    >
-
-                </div>
-
-
-                <div>
-
-                    <label>Price</label>
-
-                    <input
-                        id="productPrice"
-                        type="number"
-                        min="0"
-                        required
-                    >
-
-                </div>
-
-
-                <div>
-
-                    <label>Stock</label>
-
-                    <input
-                        id="productStock"
-                        type="number"
-                        min="0"
-                        value="0"
-                        required
-                    >
-
-                </div>
-
-
-                
-
-            </div>
-
-
-            <label>Tag</label>
-
-            <input id="productTag">
-
-
-            <label>Description</label>
-
-            <textarea
-                id="productDescription"
-                rows="4"
-            ></textarea>
-
-
-            <label>Image filename</label>
-
-            <input
-                id="productImage"
-                placeholder="MANGO_image.png"
-            >
-
-
-            <div class="modal-actions">
-
-                <button
-                    type="button"
-                    class="secondary-btn"
-                    id="cancelProductBtn"
-                >
-                    Cancel
-                </button>
-
-                <button
-                    type="submit"
-                    class="primary-btn"
-                >
-                    Save Product
-                </button>
-
-            </div>
-
-        </form>
-
-    </div>
-
+    <footer>Orinic Foods Admin <span>•</span> Store management</footer>
+  </main>
 </div>
+<div class="modal" id="productModal" aria-hidden="true"><div class="modal-card"><div class="modal-head"><div><p class="eyebrow">CATALOGUE MANAGEMENT</p><h2 id="productModalTitle">Add product</h2></div><button class="icon-button" id="closeProductModal" aria-label="Close">×</button></div><form id="productForm"><input type="hidden" id="productId"><div class="form-grid"><label>Product name *<input id="productName" required maxlength="120"></label><label>Price (₹) *<input id="productPrice" type="number" min="0.01" step="0.01" required></label><label>Stock quantity<input id="productStock" type="number" min="0" step="1" value="0"></label><label>Product tag<input id="productTag" maxlength="100" placeholder="e.g. Real fruit snack"></label><label class="span-two">
+    Main product image
 
+    <input
+        id="productImage"
+        placeholder="MANGO_image.png or uploaded image URL"
+    >
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <small>
+        You can keep using existing image filenames or upload a new image below.
+    </small>
+</label>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<label class="span-two">
+    Upload product image
 
-<script src="../supabase.js"></script>
+    <input
+        type="file"
+        id="productImageUpload"
+        accept="image/jpeg,image/png,image/webp"
+    >
 
-<script src="admin.js"></script>
+    <small>Maximum image size: 5 MB. Supported formats: JPG, PNG, WEBP.</small>
 
-</body>
-
-</html>
+    <img
+        id="productImagePreview"
+        src=""
+        alt="Product image preview"
+        style="display:none; max-width:150px; margin-top:10px; border-radius:10px;"
+    >
+</label><label class="span-two">Short description<textarea id="productDescription" rows="3"></textarea></label><label class="span-two">Ingredients<input id="productIngredients"></label><label class="span-two">Nutritional information<input id="productNutrition"></label><label class="span-two">Benefits<input id="productBenefits"></label><label>Image 2 filename<input id="productImage2"></label><label>Image 3 filename<input id="productImage3"></label></div><div class="modal-actions"><button type="button" class="button secondary" id="cancelProductBtn">Cancel</button><button type="submit" class="button primary" id="saveProductBtn">Save product</button></div></form></div></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="../supabase.js"></script><script src="admin.js"></script>
+</body></html>

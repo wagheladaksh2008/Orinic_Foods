@@ -1,3 +1,13 @@
+// Resolve existing local images and uploaded Supabase images
+function resolveProductImage(image) {
+    if (!image) return "";
+
+    if (/^https?:\/\//i.test(image)) {
+        return image;
+    }
+
+    return `images/${image}`;
+}
 const params = new URLSearchParams(window.location.search);
 const productId = params.get("id");
 
@@ -35,7 +45,7 @@ async function loadProducts() {
         card.className = "card";
 
         card.innerHTML = `
-            <img src="images/${product.image}" alt="${product.name}">
+            <img src="${resolveProductImage(product.image)}" alt="${product.name}">
             <h3>${product.name}</h3>
             <p class="product-tag">${product.tag}</p>
             <p>₹${Number(product.price).toFixed(0)}</p>
@@ -95,12 +105,12 @@ async function loadProduct() {
     const thumbnail2 = document.getElementById("thumbnail2");
     const thumbnail3 = document.getElementById("thumbnail3");
 
-    mainImage.src = `images/${product.image}`;
-    mainImage.alt = product.name;
+   mainImage.src = resolveProductImage(product.image);
+mainImage.alt = product.name;
 
-    thumbnail1.src = `images/${product.image}`;
-    thumbnail2.src = `images/${product.image_2}`;
-    thumbnail3.src = `images/${product.image_3}`;
+thumbnail1.src = resolveProductImage(product.image);
+thumbnail2.src = resolveProductImage(product.image_2);
+thumbnail3.src = resolveProductImage(product.image_3);
 
     thumbnail1.classList.add("active");
 
@@ -190,7 +200,7 @@ async function loadRecommendations() {
         card.className = "recommendation-card";
 
         card.innerHTML = `
-            <img src="images/${product.image}" alt="${product.name}">
+            <img src="${resolveProductImage(product.image)}" alt="${product.name}">
             <h3>${product.name}</h3>
             <p>${product.tag}</p>
             <p class="recommendation-price">

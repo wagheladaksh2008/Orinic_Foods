@@ -1,4 +1,13 @@
+// Resolve local and uploaded product images
+function resolveCartImage(image) {
+    if (!image) return "";
 
+    if (/^https?:\/\//i.test(image)) {
+        return image;
+    }
+
+    return `images/${image}`;
+}
 let cart = JSON.parse(localStorage.getItem("orinicCart")) || [];
 
 // Save cart to localStorage
@@ -37,7 +46,7 @@ function displayCart() {
         div.className = "cart-item";
 
         div.innerHTML = `
-            <img src="images/${item.image}" alt="Product">
+            <img src="${resolveCartImage(item.image)}" alt="Product">
 
             <div>
                 <h3></h3>
