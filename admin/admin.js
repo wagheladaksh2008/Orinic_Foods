@@ -36,66 +36,27 @@ async function init(){
   ["closeProductModal","cancelProductBtn"].forEach(id=>$(id).addEventListener("click",closeProductModal));
   $("productModal").addEventListener("click",e=>{if(e.target===$("productModal"))closeProductModal()});
   $("productForm").addEventListener("submit",saveProduct);
-  $("productImageUpload").addEventListener("change", async function () {
-    const file = this.files[0];
+  // Main image upload
+attachProductImageUpload(
+    "productImageUpload",
+    "productImage",
+    "productImagePreview",
+    "Main product image"
+);
 
-    if (!file) return;
+attachProductImageUpload(
+    "productImage2Upload",
+    "productImage2",
+    "productImage2Preview",
+    "Image 2"
+);
 
-    const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
-
-    if (!allowedTypes.includes(file.type)) {
-        showNotice("Please select a JPG, PNG, or WEBP image.", "error");
-        this.value = "";
-        return;
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-        showNotice("Image size must be less than 5 MB.", "error");
-        this.value = "";
-        return;
-    }
-
-    const preview = $("productImagePreview");
-
-    preview.src = URL.createObjectURL(file);
-    preview.style.display = "block";
-
-    const safeName = file.name
-        .replace(/[^a-zA-Z0-9._-]/g, "-");
-
-    const filePath = `${Date.now()}-${safeName}`;
-
-    showNotice("Uploading product image...", "info");
-
-    try {
-        const { data, error } = await supabaseClient
-            .storage
-            .from("product-images")
-            .upload(filePath, file, {
-                cacheControl: "3600",
-                upsert: false
-            });
-
-        if (error) throw error;
-
-        const { data: publicData } = supabaseClient
-            .storage
-            .from("product-images")
-            .getPublicUrl(data.path);
-
-        $("productImage").value = publicData.publicUrl;
-
-        showNotice("Product image uploaded successfully!", "success");
-
-    } catch (error) {
-        console.error("Image upload error:", error);
-        showNotice("Image upload failed: " + error.message, "error");
-
-        preview.src = "";
-        preview.style.display = "none";
-        this.value = "";
-    }
-});
+attachProductImageUpload(
+    "productImage3Upload",
+    "productImage3",
+    "productImage3Preview",
+    "Image 3"
+);
   $("productSearch").addEventListener("input",renderProducts);
   $("orderSearch").addEventListener("input",renderOrders);
   $("orderFilter").addEventListener("change",renderOrders);
@@ -115,23 +76,81 @@ async function init(){
 }
 function navigate(name){document.querySelectorAll(".page-section").forEach(s=>s.classList.toggle("active",s.id===`section-${name}`));document.querySelectorAll(".nav-item").forEach(b=>b.classList.toggle("active",b.dataset.section===name));const labels={dashboard:"Dashboard",products:"Products",orders:"Orders",customers:"Customers",reviews:"Product reviews"};$("pageTitle").textContent=labels[name]||"Dashboard";window.scrollTo({top:0,behavior:"smooth"})}
 async function logout(){const {error}=await supabaseClient.auth.signOut();if(error){showNotice("Could not log out: "+error.message,"error");return}location.replace("../Login.html")}
-async function loadProducts(){const {data,error}=await supabaseClient.from("products").select("*").order("created_at",{ascending:false});if(error){showNotice("Products could not be loaded: "+error.message,"error");$("productsBody").innerHTML=`<tr><td colspan="6" class="empty">Unable to load products. Check products-table permissions.</td></tr>`;return}products=data||[];renderProducts();renderDashboard()}
-function renderProducts(){const q=norm($("productSearch").value);const list=products.filter(p=>norm(p.name).includes(q)||norm(p.tag).includes(q));$("productCount").textContent=`${list.length} product${list.length===1?"":"s"}`;$("productsBody").innerHTML=list.length?list.map(p=>`<tr><td><div class="product-cell"><img
-    class="product-thumb"
-    src="${safe(getProductImageUrl(p.image))}"
-    alt="${safe(p.name)}"
-    onerror="this.style.visibility='hidden'"
-><div><b>${safe(p.name)}</b><span class="subtext">ID: ${safe(p.id)}</span></div></div></td><td>${safe(p.tag||"—")}</td><td><b>${money(p.price)}</b></td><td>${safe(p.stock??"—")}</td><td>${safe(p.description||"—")}</td><td><div class="row-actions"><button class="mini-btn edit" data-edit-product="${safe(p.id)}">Edit</button><button class="mini-btn delete" data-delete-product="${safe(p.id)}">Delete</button></div></td></tr>`).join(""):`<tr><td colspan="6" class="empty">No products found.</td></tr>`; $("productsBody").querySelectorAll("[data-edit-product]").forEach(b=>b.addEventListener("click",()=>openProductModal(products.find(p=>String(p.id)===b.dataset.editProduct))));$("productsBody").querySelectorAll("[data-delete-product]").forEach(b=>b.addEventListener("click",()=>deleteProduct(b.dataset.deleteProduct)))}
+async function loadProducts(){const {data,error}=await supabaseClient.from("products").select("*").order("created_at",{ascending:false});if(error){showNotice("Products could not be loaded: "+error.message,"error");$("productsBody").innerHTML=`<tr><td colspan="5" class="empty">Unable to load products. Check products-table permissions.</td></tr>`;return}products=data||[];renderProducts();renderDashboard()}
+function renderProducts() {
+    const q = norm($("productSearch").value);
+
+    const list = products.filter(p =>
+        norm(p.name).includes(q) ||
+        norm(p.tag).includes(q)
+    );
+
+    $("productCount").textContent =
+        `${list.length} product${list.length === 1 ? "" : "s"}`;
+
+    $("productsBody").innerHTML = list.length
+        ? list.map(p => `
+            <tr>
+                <td>
+                    <div class="product-cell">
+                        <img
+                            class="product-thumb"
+                            src="${safe(getProductImageUrl(p.image))}"
+                            alt="${safe(p.name)}"
+                            onerror="this.style.visibility='hidden'"
+                        >
+                        <div>
+                            <b>${safe(p.name)}</b>
+                            <span class="subtext">ID: ${safe(p.id)}</span>
+                        </div>
+                    </div>
+                </td>
+                <td>${safe(p.tag || "—")}</td>
+                <td><b>${money(p.price)}</b></td>
+                <td>${safe(p.description || "—")}</td>
+                <td>
+                    <div class="row-actions">
+                        <button class="mini-btn edit"
+                            data-edit-product="${safe(p.id)}">
+                            Edit
+                        </button>
+                        <button class="mini-btn delete"
+                            data-delete-product="${safe(p.id)}">
+                            Delete
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `).join("")
+        : `<tr><td colspan="5" class="empty">No products found.</td></tr>`;
+
+    $("productsBody")
+        .querySelectorAll("[data-edit-product]")
+        .forEach(b => b.addEventListener("click", () => {
+            openProductModal(
+                products.find(p =>
+                    String(p.id) === b.dataset.editProduct
+                )
+            );
+        }));
+
+    $("productsBody")
+        .querySelectorAll("[data-delete-product]")
+        .forEach(b => b.addEventListener("click", () => {
+            deleteProduct(b.dataset.deleteProduct);
+        }));
+}
 function openProductModal(p = null) {
     $("productForm").reset();
 
     $("productId").value = p?.id ?? "";
-    $("productModalTitle").textContent = p ? "Update product" : "Add product";
+    $("productModalTitle").textContent =
+        p ? "Update product" : "Add product";
 
     $("productName").value = p?.name || "";
     $("productPrice").value = p?.price ?? "";
-    $("productStock").value = p?.stock ?? 0;
     $("productTag").value = p?.tag || "";
+
     $("productImage").value = p?.image || "";
     $("productDescription").value = p?.description || "";
     $("productIngredients").value = p?.ingredients || "";
@@ -140,23 +159,183 @@ function openProductModal(p = null) {
     $("productImage2").value = p?.image_2 || "";
     $("productImage3").value = p?.image_3 || "";
 
+    // Reset all three file inputs
     $("productImageUpload").value = "";
+    $("productImage2Upload").value = "";
+    $("productImage3Upload").value = "";
 
-    const preview = $("productImagePreview");
+    // Display existing image previews
+    const imageFields = [
+        { value: p?.image, preview: "productImagePreview" },
+        { value: p?.image_2, preview: "productImage2Preview" },
+        { value: p?.image_3, preview: "productImage3Preview" }
+    ];
 
-    if (p?.image) {
-        preview.src = getProductImageUrl(p.image);
-        preview.style.display = "block";
-    } else {
-        preview.src = "";
-        preview.style.display = "none";
-    }
+    imageFields.forEach(item => {
+        const preview = $(item.preview);
+
+        if (item.value) {
+            preview.src = getProductImageUrl(item.value);
+            preview.style.display = "block";
+        } else {
+            preview.src = "";
+            preview.style.display = "none";
+        }
+    });
 
     $("productModal").classList.add("show");
     $("productModal").setAttribute("aria-hidden", "false");
 }
+
+function attachProductImageUpload(
+    fileInputId,
+    urlInputId,
+    previewId,
+    imageLabel
+) {
+    $(fileInputId).addEventListener("change", async function () {
+        const file = this.files[0];
+
+        if (!file) return;
+
+        const allowedTypes = [
+            "image/jpeg",
+            "image/png",
+            "image/webp"
+        ];
+
+        if (!allowedTypes.includes(file.type)) {
+            showNotice("Please select JPG, PNG, or WEBP.", "error");
+            this.value = "";
+            return;
+        }
+
+        if (file.size > 5 * 1024 * 1024) {
+            showNotice("Image size must not exceed 5 MB.", "error");
+            this.value = "";
+            return;
+        }
+
+        const preview = $(previewId);
+        const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "-");
+        const filePath =
+            `${Date.now()}-${crypto.randomUUID()}-${safeName}`;
+
+        preview.src = URL.createObjectURL(file);
+        preview.style.display = "block";
+
+        showNotice(`Uploading ${imageLabel}...`, "info");
+
+        try {
+            const { data, error } = await supabaseClient
+                .storage
+                .from("product-images")
+                .upload(filePath, file, {
+                    cacheControl: "3600",
+                    upsert: false
+                });
+
+            if (error) throw error;
+
+            const { data: publicData } = supabaseClient
+                .storage
+                .from("product-images")
+                .getPublicUrl(data.path);
+
+            if (!publicData?.publicUrl) {
+                throw new Error("Could not generate image URL.");
+            }
+
+            $(urlInputId).value = publicData.publicUrl;
+            preview.src = publicData.publicUrl;
+
+            showNotice(`${imageLabel} uploaded successfully!`, "success");
+
+        } catch (error) {
+            console.error(`${imageLabel} upload error:`, error);
+
+            showNotice(
+                `${imageLabel} upload failed: ${error.message}`,
+                "error"
+            );
+
+            preview.src = "";
+            preview.style.display = "none";
+            this.value = "";
+        }
+    });
+}
 function closeProductModal(){$("productModal").classList.remove("show");$("productModal").setAttribute("aria-hidden","true")}
-async function saveProduct(e){e.preventDefault();const id=$("productId").value;const payload={name:$("productName").value.trim(),price:Number($("productPrice").value),tag:$("productTag").value.trim(),description:$("productDescription").value.trim(),image:$("productImage").value.trim(),ingredients:$("productIngredients").value.trim(),nutritional_info:$("productNutrition").value.trim(),benefits:$("productBenefits").value.trim(),image_2:$("productImage2").value.trim(),image_3:$("productImage3").value.trim()};const stock=Number($("productStock").value);if(!payload.name||!Number.isFinite(payload.price)||payload.price<=0||!Number.isInteger(stock)||stock<0){showNotice("Enter a product name, valid price, and non-negative whole-number stock.","error");return}payload.stock=stock;const btn=$("saveProductBtn");btn.disabled=true;btn.textContent="Saving…";try{let result=id?await supabaseClient.from("products").update(payload).eq("id",id):await supabaseClient.from("products").insert(payload);if(result.error)throw result.error;closeProductModal();showNotice(id?"Product updated successfully.":"Product added successfully.","success");await loadProducts()}catch(err){console.error(err);showNotice("Could not save product: "+(err.message||"Database error"),"error")}finally{btn.disabled=false;btn.textContent="Save product"}}
+async function saveProduct(e) {
+    e.preventDefault();
+
+    const id = $("productId").value;
+
+    const payload = {
+        name: $("productName").value.trim(),
+        price: Number($("productPrice").value),
+        tag: $("productTag").value.trim(),
+        description: $("productDescription").value.trim(),
+        image: $("productImage").value.trim(),
+        ingredients: $("productIngredients").value.trim(),
+        nutritional_info: $("productNutrition").value.trim(),
+        benefits: $("productBenefits").value.trim(),
+        image_2: $("productImage2").value.trim(),
+        image_3: $("productImage3").value.trim()
+    };
+
+    if (
+        !payload.name ||
+        !Number.isFinite(payload.price) ||
+        payload.price <= 0
+    ) {
+        showNotice(
+            "Enter a valid product name and price.",
+            "error"
+        );
+        return;
+    }
+
+    const btn = $("saveProductBtn");
+    btn.disabled = true;
+    btn.textContent = "Saving…";
+
+    try {
+        const result = id
+            ? await supabaseClient
+                .from("products")
+                .update(payload)
+                .eq("id", id)
+            : await supabaseClient
+                .from("products")
+                .insert(payload);
+
+        if (result.error) throw result.error;
+
+        closeProductModal();
+
+        showNotice(
+            id
+                ? "Product updated successfully."
+                : "Product added successfully.",
+            "success"
+        );
+
+        await loadProducts();
+
+    } catch (err) {
+        console.error(err);
+
+        showNotice(
+            "Could not save product: " + err.message,
+            "error"
+        );
+
+    } finally {
+        btn.disabled = false;
+        btn.textContent = "Save product";
+    }
+}
 async function deleteProduct(id){const p=products.find(x=>String(x.id)===String(id));if(!p||!confirm(`Delete “${p.name}” from the catalogue? This cannot be undone.`))return;const {error}=await supabaseClient.from("products").delete().eq("id",id);if(error){showNotice("Could not delete product: "+error.message,"error");return}showNotice("Product deleted.","success");await loadProducts()}
 async function loadOrders(){ $("ordersBody").innerHTML=`<tr><td colspan="9" class="empty">Loading orders…</td></tr>`;const [or,ir,pr]=await Promise.all([supabaseClient.from("orders").select("*").order("created_at",{ascending:false}),supabaseClient.from("order_items").select("*"),supabaseClient.from("payments").select("*").order("created_at",{ascending:false})]);if(or.error){console.error(or.error);$("ordersBody").innerHTML=`<tr><td colspan="9" class="empty">Orders unavailable: ${safe(or.error.message)}</td></tr>`;showNotice("Could not load orders: "+or.error.message,"error");return}orders=or.data||[];orderItems=ir.error?[]:(ir.data||[]);payments=pr.error?[]:(pr.data||[]);renderOrders();renderRecentOrders();renderDashboard()}
 function itemsFor(o){return orderItems.filter(i=>String(i.order_id)===String(o.id))}
