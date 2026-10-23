@@ -41,7 +41,7 @@
     <section class="page-section" id="section-products">
       <div class="section-intro"><div><h2>Products</h2><p>Add new products, update details, or remove items from the catalogue.</p></div><button id="addProductBtn" class="button primary">＋ Add product</button></div>
       <div class="toolbar"><label class="searchbox">⌕ <input id="productSearch" placeholder="Search products…"></label><span class="result-count" id="productCount">0 products</span></div>
-      <div class="panel table-panel"><div class="table-wrap"><table><thead><tr><th>PRODUCT</th><th>TAG</th><th>PRICE</th><th>STOCK</th><th>DESCRIPTION</th><th>ACTIONS</th></tr></thead><tbody id="productsBody"><tr><td colspan="6" class="empty">Loading products…</td></tr></tbody></table></div></div>
+      <div class="panel table-panel"><div class="table-wrap"><table><thead><tr><th>PRODUCT</th><th>TAG</th><th>PRICE</th><th>DESCRIPTION</th><th>ACTIONS</th></tr></thead><tbody id="productsBody"><tr><td colspan="5" class="empty">Loading products…</td></tr></tbody></table></div></div>
     </section>
     <section class="page-section" id="section-orders">
       <div class="section-intro"><div><h2>Orders</h2><p>Review payment details, delivery information and update order status.</p></div><button class="button secondary" id="refreshOrders">↻ Refresh</button></div>
@@ -72,7 +72,7 @@
     <footer>Orinic Foods Admin <span>•</span> Store management</footer>
   </main>
 </div>
-<div class="modal" id="productModal" aria-hidden="true"><div class="modal-card"><div class="modal-head"><div><p class="eyebrow">CATALOGUE MANAGEMENT</p><h2 id="productModalTitle">Add product</h2></div><button class="icon-button" id="closeProductModal" aria-label="Close">×</button></div><form id="productForm"><input type="hidden" id="productId"><div class="form-grid"><label>Product name *<input id="productName" required maxlength="120"></label><label>Price (₹) *<input id="productPrice" type="number" min="0.01" step="0.01" required></label><label>Stock quantity<input id="productStock" type="number" min="0" step="1" value="0"></label><label>Product tag<input id="productTag" maxlength="100" placeholder="e.g. Real fruit snack"></label><label class="span-two">
+<div class="modal" id="productModal" aria-hidden="true"><div class="modal-card"><div class="modal-head"><div><p class="eyebrow">CATALOGUE MANAGEMENT</p><h2 id="productModalTitle">Add product</h2></div><button class="icon-button" id="closeProductModal" aria-label="Close">×</button></div><form id="productForm"><input type="hidden" id="productId"><div class="form-grid"><label>Product name *<input id="productName" required maxlength="120"></label><label>Price (₹) *<input id="productPrice" type="number" min="0.01" step="0.01" required></label><label>Product tag<input id="productTag" maxlength="100" placeholder="e.g. Real fruit snack"></label><label class="span-two">
     Main product image
 
     <input
@@ -102,6 +102,56 @@
         alt="Product image preview"
         style="display:none; max-width:150px; margin-top:10px; border-radius:10px;"
     >
-</label><label class="span-two">Short description<textarea id="productDescription" rows="3"></textarea></label><label class="span-two">Ingredients<input id="productIngredients"></label><label class="span-two">Nutritional information<input id="productNutrition"></label><label class="span-two">Benefits<input id="productBenefits"></label><label>Image 2 filename<input id="productImage2"></label><label>Image 3 filename<input id="productImage3"></label></div><div class="modal-actions"><button type="button" class="button secondary" id="cancelProductBtn">Cancel</button><button type="submit" class="button primary" id="saveProductBtn">Save product</button></div></form></div></div>
+</label><label class="span-two">Short description<textarea id="productDescription" rows="3"></textarea></label><label class="span-two">Ingredients<input id="productIngredients"></label><label class="span-two">Nutritional information<input id="productNutrition"></label><label class="span-two">Benefits<input id="productBenefits"></label><!-- Image 2 -->
+<label class="span-two">
+    Image 2 filename or URL
+    <input
+        id="productImage2"
+        placeholder="Image 2 filename or uploaded image URL"
+    >
+    <small>Enter an existing filename or upload a new image below.</small>
+</label>
+
+<label class="span-two">
+    Upload Image 2
+    <input
+        type="file"
+        id="productImage2Upload"
+        accept="image/jpeg,image/png,image/webp"
+    >
+    <small>Maximum size: 5 MB. JPG, PNG, WEBP.</small>
+    <img
+        id="productImage2Preview"
+        src=""
+        alt="Image 2 preview"
+        style="display:none; max-width:150px; max-height:150px; object-fit:contain; margin-top:10px; border-radius:10px;"
+    >
+</label>
+
+<!-- Image 3 -->
+<label class="span-two">
+    Image 3 filename or URL
+    <input
+        id="productImage3"
+        placeholder="Image 3 filename or uploaded image URL"
+    >
+    <small>Enter an existing filename or upload a new image below.</small>
+</label>
+
+<label class="span-two">
+    Upload Image 3
+    <input
+        type="file"
+        id="productImage3Upload"
+        accept="image/jpeg,image/png,image/webp"
+    >
+    <small>Maximum size: 5 MB. JPG, PNG, WEBP.</small>
+    <img
+        id="productImage3Preview"
+        src=""
+        alt="Image 3 preview"
+        style="display:none; max-width:150px; max-height:150px; object-fit:contain; margin-top:10px; border-radius:10px;"
+    >
+</label></div><div class="modal-actions"><button type="button" class="button secondary" id="cancelProductBtn">Cancel</button><button type="submit" class="button primary" id="saveProductBtn">Save product</button></div></form></div></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="../supabase.js"></script><script src="admin.js"></script>
 </body></html>
