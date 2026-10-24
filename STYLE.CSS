@@ -1154,3 +1154,13 @@ html {
 
     transition: all 0.2s ease;
 }
+.contact-content a {
+    color: inherit;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.contact-content a:hover {
+    color: #387c45;
+    text-decoration: underline;
+}
