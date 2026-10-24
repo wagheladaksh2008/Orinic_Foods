@@ -188,12 +188,13 @@ async function showDeliveryForm() {
 
     document.body.appendChild(modal);
 
-    // ======================================
+// ======================================
 // AUTO-FILL CUSTOMER DETAILS FROM SUPABASE
 // ======================================
 
 try {
 
+    // Get currently logged-in customer
     const {
         data: { user },
         error
@@ -215,25 +216,59 @@ try {
         return;
     }
 
-    // Get details saved during signup
-    const customerDetails = user.user_metadata || {};
+    // Fetch customer profile from Supabase
+    const { data: profile, error: profileError } =
+        await supabaseClient
+            .from("profiles")
+            .select(`
+                full_name,
+                phone,
+                address,
+                city,
+                state,
+                postal_code
+            `)
+            .eq("id", user.id)
+            .maybeSingle();
 
-    // Automatically fill customer name
+    if (profileError) {
+        throw profileError;
+    }
+
+    // Get customer name
     document.getElementById("customerName").value =
-        customerDetails.full_name || "";
+        profile?.full_name ||
+        user.user_metadata?.full_name ||
+        "";
 
-    // Automatically fill mobile number
+    // Get customer phone
     document.getElementById("customerPhone").value =
-        customerDetails.phone || "";
+        profile?.phone ||
+        user.user_metadata?.phone ||
+        "";
 
-    // Keep delivery address empty
-    document.getElementById("customerAddress").value = "";
+    // Build complete delivery address
+    const savedAddress = profile
+        ? [
+            profile.address,
+            profile.city,
+            profile.state,
+            profile.postal_code
+        ].filter(value => value && value.trim()).join(", ")
+        : "";
+
+    // Automatically fill delivery address
+    document.getElementById("customerAddress").value =
+        savedAddress;
 
 } catch (error) {
 
     console.error("Customer details loading error:", error);
 
-    alert("Unable to load your account details. Please try again.");
+    alert(
+        "Unable to load your saved details. " +
+        "Please try again."
+    );
 
     modal.remove();
     return;
